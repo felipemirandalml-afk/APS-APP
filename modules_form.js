@@ -68,6 +68,9 @@ window.APS.form = {
                                 <label class="flex items-center gap-2"><input type="checkbox" name="tabaquismo"> Tabaquismo</label>
                             </div>
                         </div>
+                        <div id="rcv-summary" class="mt-3 text-[10px] font-semibold text-indigo-700 italic border-t border-indigo-100 pt-2">
+                           Calculando fundamento clínico...
+                        </div>
                     </div>
 
                     <div id="hta-subflow" class="bg-blue-50 p-6 rounded-3xl border-2 border-blue-200">
@@ -226,14 +229,31 @@ window.APS.form = {
         const hta = e.evaluateHTA(data);
         const rcv = isNaN(parseInt(data.edad)) ? { level: 'Pte', method: '', reason: '' } : e.calculateRCV(data);
         const metas = e.getPSCVMeta(data);
+        // Guardas defensivas contra null
         const rcvBadge = document.getElementById('rcv-badge');
         if (rcvBadge) {
-            rcvBadge.innerText = rcv.level.toUpperCase();
+            rcvBadge.innerText = (rcv.level || '-').toUpperCase();
             rcvBadge.className = `px-4 py-1 rounded-full font-black text-[10px] text-white shadow-md uppercase ${rcv.level === 'Alto' ? 'bg-red-500' : (rcv.level === 'Moderado' ? 'bg-amber-500' : 'bg-green-500')}`;
-            document.getElementById('rcv-summary').innerText = rcv.reason || 'Calculando...';
         }
-        document.getElementById('final-pa-display').innerText = hta.avgS ? `${hta.avgS}/${hta.avgD}` : "--/--";
-        document.getElementById('status-display').innerHTML = `<div class="bg-indigo-950/50 p-2 rounded-xl flex justify-between"><div class="text-[9px] opacity-40 uppercase">Metas Salud</div><div class="text-[10px] font-bold text-green-300 font-mono">${metas.metaPA.label} | LDL < ${metas.metaLDL}</div></div>`;
-        document.getElementById('output-text').value = window.APS.generator.generateText(data);
+
+        const rcvSumm = document.getElementById('rcv-summary');
+        if (rcvSumm) {
+            rcvSumm.innerText = rcv.reason || 'Sin factores calculados.';
+        }
+
+        const paDisp = document.getElementById('final-pa-display');
+        if (paDisp) {
+            paDisp.innerText = hta.avgS ? `${hta.avgS}/${hta.avgD}` : "--/--";
+        }
+
+        const statusPanel = document.getElementById('status-display');
+        if (statusPanel) {
+            statusPanel.innerHTML = `<div class="bg-indigo-950/50 p-2 rounded-xl flex justify-between"><div class="text-[9px] opacity-40 uppercase">Metas Salud</div><div class="text-[10px] font-bold text-green-300 font-mono">${metas.metaPA.label} | LDL < ${metas.metaLDL}</div></div>`;
+        }
+
+        const outText = document.getElementById('output-text');
+        if (outText) {
+            outText.value = window.APS.generator.generateText(data);
+        }
     }
 };
