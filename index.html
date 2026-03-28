@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APS Indications Copilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans p-4 md:p-8">
+    <div class="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+        <header class="mb-6 border-b pb-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-blue-700">🩺 APS Indications Copilot</h1>
+            <button id="btn-home" class="hidden text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded">Volver al Inicio</button>
+        </header>
+
+        <div id="app-container"></div>
+    </div>
+
+    <script>window.APS = { state: {} };</script>
+    
+    <script src="modules_helpers.js"></script>
+    <script src="modules_evaluation.js"></script>
+    <script src="modules_generator.js"></script>
+    <script src="modules_form.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
