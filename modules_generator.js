@@ -46,7 +46,21 @@ window.APS.generator = {
         // 4. PLAN E INDICACIONES
         text += `[PLAN E INDICACIONES]\n`;
         text += `Control: ${e.evaluateStatus(data).text.toUpperCase()}.\n`;
-        text += `${data.ind_farmacos || 'Mantener indicaciones farmacológicas vigentes y enfatizar cambios estilo vida saludable.'}\n`;
+        
+        if (isCV) {
+            const h = e.evaluateManejoHTA(data);
+            if (h.pasoActual.id === 0 && !h.enMeta) {
+                text += `Medidas no farmacológicas: restricción de sodio, alimentación saludable, actividad física y cese de tabaco. `;
+                text += `Dado cifras fuera de meta, se propone iniciar Paso 1 HEARTS (${h.nextPaso.drugs}). `;
+            } else if (!h.enMeta) {
+                text += `Paciente fuera de meta en su esquema actual (${h.pasoActual.label}). Se sugiere ajustar a ${h.nextPaso.label}: ${h.nextPaso.drugs}. `;
+            } else {
+                text += `PA en rango meta. Mantener esquema actual (${h.pasoActual.label}). `;
+            }
+            text += `Control en ${h.frecuencia}.\n`;
+        }
+
+        text += `${data.ind_farmacos || (isCV ? '' : 'Mantener indicaciones farmacológicas vigentes y enfatizar cambios estilo vida saludable.')}`;
 
         return text;
     },

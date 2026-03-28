@@ -183,5 +183,52 @@ window.APS.evaluation = {
         return { isCompensated, text: evaluationText.join(". ") || (isCompensated ? "En rango meta." : "Fuera de meta.") };
     },
 
-    getIngresoExams: () => "- Perfil lipídico\n- HbA1c\n- Creatinina\n- RAC\n- Electrolitos\n- ECG"
+    getIngresoExams: () => "- Perfil lipídico\n- HbA1c\n- Creatinina\n- RAC\n- Electrolitos\n- ECG",
+
+    evaluateManejoHTA: (data) => {
+        const hta = window.APS.evaluation.evaluateHTA(data);
+        const metas = window.APS.evaluation.getPSCVMeta(data);
+        const rcv = window.APS.evaluation.calculateRCV(data).level;
+        
+        const pasoActual = parseInt(data.manejo_hta_paso) || 0;
+        const enMeta = hta.avgS > 0 && hta.avgS < metas.metaPA.s && hta.avgD < metas.metaPA.d;
+        
+        const pasosHEARTS = [
+            { id: 0, label: "Paso 0", drugs: "M. no farmacológicas", text: "Sin fármacos / Medidas estilo vida" },
+            { id: 1, label: "Paso 1", drugs: "Losartán 50 + Amlodipino 5", text: "Losartán 50 mg + Amlodipino 5 mg" },
+            { id: 2, label: "Paso 2", drugs: "Losartán 100 + Amlodipino 10", text: "Losartán 100 mg + Amlodipino 10 mg" },
+            { id: 3, label: "Paso 3", drugs: "Triple terapia (+ Diurético)", text: "Losartán 100 + Amlodipino 10 + Hidroclorotiazida 12.5-25 mg" },
+            { id: 4, label: "Paso 4", drugs: "HTA Resistente", text: "HTA resistente. Derivar. Considerar Espironolactona 25 mg." }
+        ];
+
+        let sugerencia = "";
+        let frecuencia = "";
+        let nextPaso = pasoActual;
+
+        if (enMeta) {
+            sugerencia = `Mantener ${pasosHEARTS[pasoActual].label}.`;
+            if (rcv === 'Alto') frecuencia = "3 a 4 meses";
+            else if (rcv === 'Moderado') frecuencia = "4 a 6 meses";
+            else frecuencia = "6 a 12 meses";
+        } else if (hta.avgS > 0) {
+            frecuencia = "1 mes";
+            if (pasoActual < 4) {
+                nextPaso = pasoActual + 1;
+                sugerencia = `Subir a ${pasosHEARTS[nextPaso].label}: ${pasosHEARTS[nextPaso].drugs}.`;
+            } else {
+                sugerencia = "Persiste fuera de meta con terapia triple. Confirmar HTA resistente y derivar.";
+            }
+        } else {
+            sugerencia = "Ingrese cifras de PA para evaluar.";
+            frecuencia = "Pte.";
+        }
+
+        return { 
+            enMeta, 
+            pasoActual: pasosHEARTS[pasoActual],
+            nextPaso: pasosHEARTS[nextPaso],
+            sugerencia, 
+            frecuencia 
+        };
+    }
 };

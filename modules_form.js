@@ -32,7 +32,8 @@ window.APS.form = {
             ex_hba1c: false,
             ex_fo: false,
             ex_tsh: false,
-            ex_calcio: false
+            ex_calcio: false,
+            manejo_hta_paso: 0
         };
         
         const container = document.getElementById('app-container');
@@ -72,6 +73,37 @@ window.APS.form = {
                            Calculando fundamento clínico...
                         </div>
                     </div>
+
+
+                    ${isCV ? `
+                    <!-- MANEJO HTA - ALGORITMO HEARTS -->
+                    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4 mb-6">
+                        <div class="flex justify-between items-center border-b border-gray-50 pb-2">
+                            <h3 class="font-black text-indigo-900 uppercase text-[10px] tracking-widest">Esquema HEARTS</h3>
+                            <select name="manejo_hta_paso" class="text-[10px] font-bold border-2 rounded-lg p-1 bg-indigo-50 text-indigo-700">
+                                <option value="0">Paso 0: S/ fármacos</option>
+                                <option value="1">Paso 1: Biterapia inicial</option>
+                                <option value="2">Paso 2: Biterapia plenas</option>
+                                <option value="3">Paso 3: Triple terapia</option>
+                                <option value="4">Paso 4: HTA Resistente</option>
+                            </select>
+                        </div>
+                        
+                        <div id="hearts-feedback" class="space-y-2">
+                            <div class="flex justify-between items-center text-[9px] font-bold">
+                                <span class="text-gray-400">ESTADO:</span>
+                                <span id="hearts-status" class="px-2 py-0.5 rounded-full font-black text-[8px]">Evaluando...</span>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-2xl border border-gray-100">
+                                <p id="hearts-suggestion" class="text-[10px] text-gray-700 font-medium leading-tight">Ingrese cifras de PA para ver sugerencia.</p>
+                            </div>
+                            <div class="flex justify-between items-center text-[9px] font-bold text-indigo-600">
+                                <span>PRÓXIMO CONTROL:</span>
+                                <span id="hearts-freq" class="bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">Pte.</span>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
 
                     <div id="hta-subflow" class="bg-blue-50 p-6 rounded-3xl border-2 border-blue-200">
                         <h3 class="font-bold text-blue-900 border-b border-blue-100 pb-2 mb-4 flex justify-between items-center text-xs uppercase tracking-widest"><span>Registro de Presión Arterial</span></h3>
@@ -249,6 +281,25 @@ window.APS.form = {
         const statusPanel = document.getElementById('status-display');
         if (statusPanel) {
             statusPanel.innerHTML = `<div class="bg-indigo-950/50 p-2 rounded-xl flex justify-between"><div class="text-[9px] opacity-40 uppercase">Metas Salud</div><div class="text-[10px] font-bold text-green-300 font-mono">${metas.metaPA.label} | LDL < ${metas.metaLDL}</div></div>`;
+        }
+
+        // Feedback HEARTS
+        const heartsSugg = document.getElementById('hearts-suggestion');
+        if (heartsSugg) {
+            const h = e.evaluateManejoHTA(data);
+            const hStatus = document.getElementById('hearts-status');
+            const hFreq = document.getElementById('hearts-freq');
+            
+            heartsSugg.innerText = h.sugerencia;
+            hFreq.innerText = h.frecuencia;
+            
+            if (h.enMeta) {
+                hStatus.innerText = "EN META";
+                hStatus.className = "px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-black text-[8px]";
+            } else {
+                hStatus.innerText = "FUERA DE META";
+                hStatus.className = "px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-black text-[8px]";
+            }
         }
 
         const outText = document.getElementById('output-text');
