@@ -34,6 +34,24 @@ window.APS.form = {
             ex_tsh: false,
             ex_calcio: false,
             manejo_hta_paso: 0,
+            // Riesgo Cardiovascular
+            dm2: false,
+            ecv_ateroesclerotica: false,
+            erc_avanzada: false,
+            albuminuria_ms: false,
+            hta_refractaria: false,
+            ldl_190: false,
+            hipercolesterolemia_familiar: false,
+            tabaquismo: false,
+            hta: false,
+            dislipidemia: false,
+            af_ecv_prematura: false,
+            ante_obstetricos: false,
+            menopausia_precoz: false,
+            enf_autoinmune: false,
+            vih: false,
+            trastorno_mental: false,
+            cac_elevado: false,
             // UI State
             show_full_note: false
         };
@@ -57,28 +75,56 @@ window.APS.form = {
                     </div>
 
                     ${isCV ? `
+                    <!-- RCV DETALLADO -->
                     <div id="rcv-section" class="bg-indigo-50 p-8 rounded-[40px] border-2 border-indigo-200">
-                        <div class="flex justify-between items-center mb-6"><h3 class="font-black text-indigo-900 uppercase text-xs tracking-widest">RCV Automática</h3><div id="rcv-badge" class="px-5 py-1.5 rounded-full font-black text-xs text-white bg-green-500 shadow-md uppercase">BAJO</div></div>
-                        <div class="grid grid-cols-2 gap-6 text-sm font-bold text-indigo-800">
-                            <div class="space-y-2"><p class="text-[10px] text-indigo-400 uppercase tracking-tighter">Alto Riesgo</p>
-                                <label class="flex items-center gap-3"><input type="checkbox" name="dm2" class="w-4 h-4"> DM2</label>
-                                <label class="flex items-center gap-3"><input type="checkbox" name="ecv_ateroesclerotica" class="w-4 h-4"> ECV Atero</label>
-                                <label class="flex items-center gap-3"><input type="checkbox" name="erc_avanzada" class="w-4 h-4"> ERC Avanzada</label>
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-black text-indigo-900 uppercase text-xs tracking-widest">RCV Chileno Automático</h3>
+                            <div id="rcv-badge" class="px-5 py-1.5 rounded-full font-black text-xs text-white bg-green-500 shadow-xl uppercase transition-all duration-300">BAJO</div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <!-- RIESGO ALTO DIRECTO -->
+                            <div class="space-y-3">
+                                <p class="text-[10px] text-red-500 font-black uppercase tracking-widest border-b border-red-100 pb-1">Criterios de Riesgo Alto Directo</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs font-bold text-indigo-900">
+                                    <label class="flex items-center gap-3"><input type="checkbox" name="dm2" class="w-4 h-4"> Diabetes Mellitus tipo 2</label>
+                                    <label class="flex items-center gap-3"><input type="checkbox" name="ecv_ateroesclerotica" class="w-4 h-4"> Enfermedad Cardiovascular Ateroesclerótica</label>
+                                    <label class="flex items-center gap-3"><input type="checkbox" name="erc_avanzada" class="w-4 h-4 text-red-600"> ERC avanzada o etapa 3-5</label>
+                                    <label class="flex items-center gap-3"><input type="checkbox" name="albuminuria_ms" class="w-4 h-4 text-red-600"> Albuminuria moderada o severa (RAC > 30)</label>
+                                    <label class="flex items-center gap-3"><input type="checkbox" name="hta_refractaria" class="w-4 h-4 text-red-600"> Hipertensión Arterial Refractaria</label>
+                                    <label class="flex items-center gap-3"><input type="checkbox" name="ldl_190" class="w-4 h-4 text-red-600"> Dislipidemia severa (LDL > 190 mg/dL)</label>
+                                    <label class="flex items-center gap-3"><input type="checkbox" name="hipercolesterolemia_familiar" class="w-4 h-4 text-red-600"> Hipercolesterolemia familiar</label>
+                                </div>
                             </div>
-                            <div class="space-y-2"><p class="text-[10px] text-indigo-400 uppercase tracking-tighter">Otros Factores</p>
-                                <label class="flex items-center gap-3"><input type="checkbox" name="hta" class="w-4 h-4"> HTA</label>
-                                <label class="flex items-center gap-3"><input type="checkbox" name="dislipidemia" class="w-4 h-4"> Dislipidemia</label>
-                                <label class="flex items-center gap-3"><input type="checkbox" name="tabaquismo" class="w-4 h-4"> Tabaquismo</label>
+
+                            <!-- OTROS FACTORES Y MODIFICADORES -->
+                            <div class="space-y-3">
+                                <p class="text-[10px] text-indigo-400 font-black uppercase tracking-widest border-b border-indigo-100 pb-1">Factores de Riesgo y Modificadores</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs font-bold text-indigo-700">
+                                    <label class="flex items-center gap-3"><input type="checkbox" name="hta" class="w-4 h-4"> Hipertensión Arterial Diagnosticada</label>
+                                    <label class="flex items-center gap-3"><input type="checkbox" name="dislipidemia" class="w-4 h-4"> Dislipidemia Diagnosticada</label>
+                                    <label class="flex items-center gap-3"><input type="checkbox" name="tabaquismo" class="w-4 h-4"> Tabaquismo Activo</label>
+                                    <label class="flex items-center gap-3"><input type="checkbox" name="af_ecv_prematura" class="w-4 h-4"> Antecedente familiar ECV prematura</label>
+                                    
+                                    <p class="col-span-1 md:col-span-2 text-[9px] text-indigo-300 font-bold border-t border-indigo-50 mt-2 pt-1 uppercase">Modificadores (pueden subir riesgo):</p>
+                                    <label class="flex items-center gap-3 text-indigo-400"><input type="checkbox" name="ante_obstetricos" class="w-4 h-4"> Antecedentes obstétricos de riesgo</label>
+                                    <label class="flex items-center gap-3 text-indigo-400"><input type="checkbox" name="menopausia_precoz" class="w-4 h-4"> Menopausia precoz</label>
+                                    <label class="flex items-center gap-3 text-indigo-400"><input type="checkbox" name="enf_autoinmune" class="w-4 h-4"> Enfermedad autoinmune</label>
+                                    <label class="flex items-center gap-3 text-indigo-400"><input type="checkbox" name="vih" class="w-4 h-4"> VIH</label>
+                                    <label class="flex items-center gap-3 text-indigo-400"><input type="checkbox" name="trastorno_mental" class="w-4 h-4"> Trastorno mental grave</label>
+                                    <label class="flex items-center gap-3 text-indigo-400"><input type="checkbox" name="cac_elevado" class="w-4 h-4"> Calcio Coronario (CAC) elevado</label>
+                                </div>
                             </div>
                         </div>
-                        <div id="rcv-summary" class="mt-4 text-xs font-semibold text-indigo-700 italic border-t border-indigo-100 pt-4">Calculando fundamento clínico...</div>
+
+                        <div id="rcv-summary" class="mt-6 text-xs font-semibold text-indigo-900 border-l-4 border-indigo-200 pl-4 py-2 bg-white/50 rounded-r-2xl shadow-inner italic">Calculando fundamento clínico...</div>
                     </div>
 
                     <!-- ALGORITMO HEARTS -->
                     <div class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm space-y-4">
                         <div class="flex justify-between items-center border-b border-gray-50 pb-4">
                             <h3 class="font-black text-indigo-900 uppercase text-xs tracking-widest">Manejo HTA (HEARTS)</h3>
-                            <select name="manejo_hta_paso" class="text-xs font-bold border-2 rounded-xl p-2 bg-indigo-50 text-indigo-700 outline-none">
+                            <select name="manejo_hta_paso" class="text-xs font-bold border-2 rounded-xl p-2 bg-indigo-50 text-indigo-700 outline-none transition-all focus:border-indigo-400">
                                 <option value="0">Paso 0: S/ fármacos</option>
                                 <option value="1">Paso 1: Biterapia inicial</option>
                                 <option value="2">Paso 2: Biterapia plenas</option>
@@ -92,7 +138,7 @@ window.APS.form = {
                                 <span id="hearts-status" class="px-3 py-1 rounded-full font-black text-[10px]">Evaluando...</span>
                             </div>
                             <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                <p id="hearts-suggestion" class="text-sm text-gray-700 font-medium leading-relaxed">Cargando sugerencia clínica...</p>
+                                <p id="hearts-suggestion" class="text-sm text-gray-700 font-medium leading-relaxed">Sugerencia clínica...</p>
                             </div>
                             <div class="flex justify-between items-center text-xs font-bold text-indigo-600">
                                 <span>PRÓXIMO CONTROL:</span>
@@ -153,25 +199,25 @@ window.APS.form = {
                     ` : ''}
                     ` : ''}
 
-                    <textarea name="ind_farmacos" placeholder="Plan e indicaciones adicionales..." class="w-full border-2 p-6 rounded-[40px] h-28 text-sm font-semibold outline-none focus:border-indigo-400 transition-all"></textarea>
+                    <div class="h-10"></div> <!-- Espaciado extra final -->
                 </form>
 
                 <!-- COLUMNA DERECHA: NOTA CLÍNICA (Panel compacto) -->
                 <div class="bg-indigo-900 rounded-[50px] p-8 shadow-2xl text-white flex flex-col border-8 border-indigo-800 relative lg:sticky lg:top-8 h-fit">
                     <div class="flex justify-between items-center mb-10">
-                        <h2 class="text-xs font-black tracking-widest uppercase opacity-40">Reporte Clínico</h2>
+                        <h2 class="text-xs font-black tracking-widest uppercase opacity-40 font-mono">Reporte Clínico</h2>
                         <span id="final-pa-display" class="bg-white text-indigo-900 px-8 py-2 rounded-full font-black text-2xl shadow-xl font-mono">--/--</span>
                     </div>
                     <div id="status-display" class="space-y-4 mb-10"></div>
                     
                     <div class="relative">
-                        <textarea id="output-text" class="w-full p-8 rounded-[40px] bg-indigo-950/60 font-mono text-xs text-indigo-100 outline-none leading-relaxed resize-none transition-all duration-300" style="height: 250px;" readonly></textarea>
+                        <textarea id="output-text" class="w-full p-8 rounded-[40px] bg-indigo-950/60 font-mono text-xs text-indigo-100 outline-none leading-relaxed resize-none transition-all duration-300 shadow-inner" style="height: 250px;" readonly></textarea>
                         <div id="note-overlay" class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-indigo-950/90 to-transparent rounded-b-[40px]"></div>
                     </div>
 
                     <div class="flex gap-4 mt-8">
                         <button id="btn-toggle-note" class="flex-grow bg-indigo-800 hover:bg-indigo-700 text-white font-black py-5 rounded-3xl uppercase shadow-lg text-xs tracking-widest transition-all">Ver Completo</button>
-                        <button id="btn-copy" class="flex-grow bg-white text-indigo-900 font-black py-5 rounded-3xl uppercase shadow-lg text-xs tracking-widest hover:bg-gray-100 transition-all">Copiar Ficha</button>
+                        <button id="btn-copy" class="flex-grow bg-white text-indigo-900 font-black py-5 rounded-3xl uppercase shadow-lg text-xs tracking-widest hover:bg-gray-100 transition-all active:scale-95">Copiar Ficha</button>
                     </div>
                 </div>
             </div>
@@ -192,7 +238,7 @@ window.APS.form = {
             // Lógica reactiva de exámenes (DM2/HTA)
             if (window.APS.state.module === 'cardiovascular' && window.APS.state.type === 'ingreso') {
                 const isDM2 = window.APS.state.dm2;
-                const isHTA = window.APS.state.hta || (window.APS.state.pa1_s >= 140);
+                const isHTA = window.APS.state.hta || (window.APS.state.pa1_s >= 140) || window.APS.state.hta_refractaria;
                 
                 const chkRAC = document.getElementById('chk-ex-rac');
                 const chkHbA1c = document.getElementById('chk-ex-hba1c');
@@ -234,7 +280,7 @@ window.APS.form = {
             const txt = document.getElementById('output-text');
             const overlay = document.getElementById('note-overlay');
             if (window.APS.state.show_full_note) {
-                btn.innerText = "Ver Menos"; txt.style.height = "650px"; overlay.style.display = "none";
+                btn.innerText = "Ver Menos"; txt.style.height = "700px"; overlay.style.display = "none";
             } else {
                 btn.innerText = "Ver Completo"; txt.style.height = "250px"; overlay.style.display = "block";
             }
@@ -257,7 +303,7 @@ window.APS.form = {
         const rcvBadge = document.getElementById('rcv-badge');
         if (rcvBadge) {
             rcvBadge.innerText = (rcv.level || '-').toUpperCase();
-            rcvBadge.className = `px-5 py-1.5 rounded-full font-black text-xs text-white shadow-md uppercase ${rcv.level === 'Alto' ? 'bg-red-500' : (rcv.level === 'Moderado' ? 'bg-amber-500' : 'bg-green-500')}`;
+            rcvBadge.className = `px-5 py-1.5 rounded-full font-black text-xs text-white shadow-2xl uppercase ${rcv.level === 'Alto' ? 'bg-red-500 scale-105' : (rcv.level === 'Moderado' ? 'bg-amber-500' : 'bg-green-500')}`;
         }
         const rcvSumm = document.getElementById('rcv-summary');
         if (rcvSumm) rcvSumm.innerText = rcv.reason || 'Sin factores calculados.';
@@ -267,7 +313,7 @@ window.APS.form = {
 
         const statusPanel = document.getElementById('status-display');
         if (statusPanel) {
-            statusPanel.innerHTML = `<div class="bg-indigo-950/60 p-4 rounded-3xl flex justify-between items-center"><div class="text-[10px] opacity-40 uppercase font-black">Metas PSCV</div><div class="text-base font-bold text-green-300 font-mono">${metas.metaPA.label} | LDL < ${metas.metaLDL}</div></div>`;
+            statusPanel.innerHTML = `<div class="bg-indigo-950/60 p-4 rounded-3xl flex justify-between items-center shadow-lg"><div class="text-[10px] opacity-40 uppercase font-black font-mono">Metas PSCV</div><div class="text-base font-bold text-green-300 font-mono">${metas.metaPA.label} | LDL < ${metas.metaLDL}</div></div>`;
         }
 
         const heartsSugg = document.getElementById('hearts-suggestion');

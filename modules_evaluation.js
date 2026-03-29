@@ -40,14 +40,14 @@ window.APS.evaluation = {
         
         // 1. Criterios Directos de Riesgo ALTO
         let directReason = "";
-        if (data.ecv_ateroesclerotica) directReason = "ECV ateroesclerótica documentada";
-        else if (data.dm2) directReason = "Diabetes mellitus";
-        else if (data.erc_avanzada || (data.erc && data.erc_etapa >= 3)) directReason = "Enfermedad renal crónica avanzada";
-        else if (data.albuminuria_ms) directReason = "Albuminuria moderada/severa";
-        else if (data.hta_refractaria) directReason = "HTA refractaria";
-        else if (data.ldl_190) directReason = "LDL > 190 mg/dL / Dislipidemia severa";
+        if (data.ecv_ateroesclerotica) directReason = "Enfermedad Cardiovascular Ateroesclerótica documentada";
+        else if (data.dm2) directReason = "Diabetes Mellitus tipo 2";
+        else if (data.erc_avanzada) directReason = "Enfermedad Renal Crónica avanzada (Etapa 3 a 5)";
+        else if (data.albuminuria_ms) directReason = "Albuminuria moderada o severa (RAC > 30)";
+        else if (data.hta_refractaria) directReason = "Hipertensión Arterial Refractaria";
+        else if (data.ldl_190) directReason = "Dislipidemia severa (LDL > 190 mg/dL)";
         else if (data.hipercolesterolemia_familiar) directReason = "Hipercolesterolemia familiar";
-        else if (age >= 80) directReason = "Edad ≥ 80 años";
+        else if (age >= 80) directReason = "Adulto Mayor (Edad ≥ 80 años)";
 
         if (directReason) {
             return { level: 'Alto', method: 'Criterio directo', reason: directReason, modifiersActive: false };
