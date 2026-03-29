@@ -26,7 +26,14 @@ window.APS.generator = {
         if (data.erc_avanzada) coMorbs.push("ERC");
         if (data.ecv_ateroesclerotica) coMorbs.push("ECV ateroesclerótica");
         
-        text += `Comorbilidades: ${coMorbs.length > 0 ? coMorbs.join(", ") : "no se registran"}.\n`;
+        // Incorporar otros diagnósticos en la misma línea si existen
+        let coMorbText = coMorbs.length > 0 ? coMorbs.join(", ") : "";
+        if (data.otros_diagnosticos?.trim()) {
+            const others = data.otros_diagnosticos.trim();
+            coMorbText = coMorbText ? `${coMorbText}, ${others}` : others;
+        }
+        
+        text += `Comorbilidades: ${coMorbText || "no se registran"}.\n`;
         
         if (data.cirugias_previas?.trim()) {
             text += `Cirugías previas: ${h.formatClinicalText(data.cirugias_previas)}\n`;

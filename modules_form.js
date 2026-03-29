@@ -18,6 +18,7 @@ window.APS.form = {
                 // Nuevos Antecedentes
                 cirugias_previas: '',
                 farmacos_habituales: '',
+                otros_diagnosticos: '',
                 // Manejo Clínico
                 pa1_s: null, pa1_d: null, pa2_s: null, pa2_d: null, show_pa2: false,
                 manejo_hta_paso: 0, examen_fisico: '',
@@ -155,6 +156,10 @@ window.APS.form = {
                             ${window.APS.form.toggleCompact('tabaquismo', 'Tabaquismo')}
                             ${window.APS.form.toggleCompact('erc_avanzada', 'Enf. Renal C.')}
                             ${window.APS.form.toggleCompact('ecv_ateroesclerotica', 'Enf. Cardiovasc.')}
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-slate-50">
+                             <label class="block text-[9px] font-black uppercase text-slate-400 mb-2 italic">Otros Diagnósticos (Lupus, Artritis, Tiroides, etc.)</label>
+                             <textarea name="otros_diagnosticos" placeholder="Escribir aquí otros antecedentes médicos relevantes..." class="w-full border-2 border-slate-50 bg-slate-50/50 p-3 rounded-xl h-16 text-[11px] font-medium focus:border-blue-400 outline-none transition-all">${window.APS.state.otros_diagnosticos}</textarea>
                         </div>
                     </div>
                 </div>
