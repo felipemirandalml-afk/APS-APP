@@ -107,24 +107,36 @@ window.APS.form = {
         });
 
         const app = document.getElementById('app-container');
-        app.addEventListener('input', (e) => {
-            const { name, value, type, checked } = e.target;
-            if (!name) return;
-            window.APS.state[name] = type === 'checkbox' ? checked : value;
+        
+        // NUEVO: Validamos si el evento global ya existe para evitar la fuga de memoria
+        if (!window.APS.form.__globalInputBound) {
+            app.addEventListener('input', (e) => {
+                const { name, value, type, checked } = e.target;
+                if (!name) return;
+                window.APS.state[name] = type === 'checkbox' ? checked : value;
 
-            // Lógica genérica compartida por todos los módulos
-            if (name === 'peso' || name === 'talla') {
-                window.APS.state.imc = window.APS.helpers.calculateBMI(window.APS.state.peso, window.APS.state.talla);
-            }
+                // Lógica genérica compartida
+                if (name === 'peso' || name === 'talla') {
+                    window.APS.state.imc = window.APS.helpers.calculateBMI(window.APS.state.peso, window.APS.state.talla);
+                }
 
-            // Hook: Dejar que el módulo maneje sus propias reglas de negocio
-            if (typeof moduleDef.onStateChange === 'function') {
-                moduleDef.onStateChange(name, window.APS.state);
-            }
+                // IMPORTANTE: Obtenemos el módulo actual en tiempo real
+                const currentModuleDef = window.APS.form.getModuleDefinition();
 
-            moduleDef.onInput?.(name);
-            window.APS.form.updateOutput();
-        });
+                // Hook: Dejar que el módulo actual maneje sus propias reglas
+                if (currentModuleDef && typeof currentModuleDef.onStateChange === 'function') {
+                    currentModuleDef.onStateChange(name, window.APS.state);
+                }
+
+                if (currentModuleDef && typeof currentModuleDef.onInput === 'function') {
+                    currentModuleDef.onInput(name);
+                }
+                
+                window.APS.form.updateOutput();
+            });
+            // Marcamos que ya amarramos este evento para que no se duplique jamás
+            window.APS.form.__globalInputBound = true; 
+        }
 
         moduleDef.bindEvents?.();
 
