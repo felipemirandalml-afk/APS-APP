@@ -202,22 +202,43 @@ window.APS.form = {
                     <div class="h-10"></div> <!-- Espaciado extra final -->
                 </form>
 
-                <!-- COLUMNA DERECHA: NOTA CLÍNICA (Panel compacto) -->
-                <div class="bg-indigo-900 rounded-[50px] p-8 shadow-2xl text-white flex flex-col border-8 border-indigo-800 relative lg:sticky lg:top-8 h-fit">
-                    <div class="flex justify-between items-center mb-10">
-                        <h2 class="text-xs font-black tracking-widest uppercase opacity-40 font-mono">Reporte Clínico</h2>
-                        <span id="final-pa-display" class="bg-white text-indigo-900 px-8 py-2 rounded-full font-black text-2xl shadow-xl font-mono">--/--</span>
-                    </div>
-                    <div id="status-display" class="space-y-4 mb-10"></div>
-                    
-                    <div class="relative">
-                        <textarea id="output-text" class="w-full p-8 rounded-[40px] bg-indigo-950/60 font-mono text-xs text-indigo-100 outline-none leading-relaxed resize-none transition-all duration-300 shadow-inner" style="height: 250px;" readonly></textarea>
-                        <div id="note-overlay" class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-indigo-950/90 to-transparent rounded-b-[40px]"></div>
+                <!-- COLUMNA DERECHA: REPORTE CLÍNICO (Dashboard Premium) -->
+                <div class="bg-[#0f172a] rounded-[32px] p-6 shadow-2xl text-white flex flex-col border border-slate-800 relative lg:sticky lg:top-8 h-fit ring-1 ring-white/10">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-[10px] font-black tracking-[0.2em] uppercase text-slate-500">Clinical Report Analytics</h2>
+                        <div class="flex gap-2">
+                            <span id="rcv-chip" class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight">--</span>
+                            <span id="pa-chip" class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight bg-slate-800 text-slate-300">--/--</span>
+                        </div>
                     </div>
 
-                    <div class="flex gap-4 mt-8">
-                        <button id="btn-toggle-note" class="flex-grow bg-indigo-800 hover:bg-indigo-700 text-white font-black py-5 rounded-3xl uppercase shadow-lg text-xs tracking-widest transition-all">Ver Completo</button>
-                        <button id="btn-copy" class="flex-grow bg-white text-indigo-900 font-black py-5 rounded-3xl uppercase shadow-lg text-xs tracking-widest hover:bg-gray-100 transition-all active:scale-95">Copiar Ficha</button>
+                    <!-- MINI RESUMEN EJECUTIVO (Dashboard Chips) -->
+                    <div id="exec-summary" class="grid grid-cols-2 gap-2 mb-6">
+                        <div class="bg-slate-800/40 p-3 rounded-2xl border border-slate-700/50">
+                            <p class="text-[8px] text-slate-500 uppercase font-black mb-1">Estado Meta PA</p>
+                            <p id="chip-meta" class="text-[10px] font-bold text-slate-200">Calculando...</p>
+                        </div>
+                        <div class="bg-slate-800/40 p-3 rounded-2xl border border-slate-700/50">
+                            <p class="text-[8px] text-slate-500 uppercase font-black mb-1">Manejo HTA</p>
+                            <p id="chip-hearts" class="text-[10px] font-bold text-slate-200">Evaluando...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- PREVIEW DE LA NOTA (Compacta & Minimalista) -->
+                    <div class="relative group mb-6 overflow-hidden rounded-2xl bg-black/20 border border-slate-800 transition-all duration-500">
+                        <div id="output-preview" class="p-6 font-mono text-[11px] text-slate-300 leading-relaxed whitespace-pre-wrap transition-all duration-500 overflow-hidden" style="max-height: 140px;">
+                            No hay datos suficientes para generar el reporte técnico.
+                        </div>
+                        <div id="note-fade" class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#0f172a] to-transparent pointer-events-none"></div>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        <button id="btn-copy" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl uppercase shadow-lg text-xs tracking-[0.1em] transition-all active:scale-[0.98] ring-1 ring-blue-400/20">
+                            Copiar Nota a Ficha
+                        </button>
+                        <button id="btn-toggle-note" class="w-full bg-transparent hover:bg-slate-800 text-slate-400 font-bold py-3 rounded-xl uppercase text-[10px] tracking-[0.05em] transition-all border border-slate-800">
+                            Ver Nota Completa
+                        </button>
                     </div>
                 </div>
             </div>
@@ -277,14 +298,18 @@ window.APS.form = {
         document.getElementById('btn-toggle-note').addEventListener('click', () => {
             window.APS.state.show_full_note = !window.APS.state.show_full_note;
             const btn = document.getElementById('btn-toggle-note');
-            const txt = document.getElementById('output-text');
-            const overlay = document.getElementById('note-overlay');
+            const preview = document.getElementById('output-preview');
+            const fade = document.getElementById('note-fade');
+            
             if (window.APS.state.show_full_note) {
-                btn.innerText = "Ver Menos"; txt.style.height = "700px"; overlay.style.display = "none";
+                btn.innerText = "Contraer Nota";
+                preview.style.maxHeight = "none";
+                fade.style.display = "none";
             } else {
-                btn.innerText = "Ver Completo"; txt.style.height = "250px"; overlay.style.display = "block";
+                btn.innerText = "Ver Nota Completa";
+                preview.style.maxHeight = "140px";
+                fade.style.display = "block";
             }
-            window.APS.form.updateOutput();
         });
 
         document.getElementById('btn-copy').addEventListener('click', () => {
@@ -300,6 +325,7 @@ window.APS.form = {
         const rcv = (data.module === 'cardiovascular' && !isNaN(parseInt(data.edad))) ? e.calculateRCV(data) : { level: '-', reason: 'Calculando...' };
         const metas = e.getPSCVMeta(data);
 
+        // Update RCV Badge
         const rcvBadge = document.getElementById('rcv-badge');
         if (rcvBadge) {
             rcvBadge.innerText = (rcv.level || '-').toUpperCase();
@@ -308,32 +334,44 @@ window.APS.form = {
         const rcvSumm = document.getElementById('rcv-summary');
         if (rcvSumm) rcvSumm.innerText = rcv.reason || 'Sin factores calculados.';
 
-        const paDisp = document.getElementById('final-pa-display');
-        if (paDisp) paDisp.innerText = hta.avgS ? `${hta.avgS}/${hta.avgD}` : "--/--";
-
-        const statusPanel = document.getElementById('status-display');
-        if (statusPanel) {
-            statusPanel.innerHTML = `<div class="bg-indigo-950/60 p-4 rounded-3xl flex justify-between items-center shadow-lg"><div class="text-[10px] opacity-40 uppercase font-black font-mono">Metas PSCV</div><div class="text-base font-bold text-green-300 font-mono">${metas.metaPA.label} | LDL < ${metas.metaLDL}</div></div>`;
+        // Dashboard Chips (Right Panel)
+        const rcvChip = document.getElementById('rcv-chip');
+        if (rcvChip) {
+            rcvChip.innerText = `RCV: ${rcv.level}`;
+            rcvChip.className = `px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight ${rcv.level === 'Alto' ? 'bg-red-950/50 text-red-400' : (rcv.level === 'Moderado' ? 'bg-amber-950/50 text-amber-500' : 'bg-emerald-950/50 text-emerald-500')}`;
         }
+        
+        const paChip = document.getElementById('pa-chip');
+        if (paChip) paChip.innerText = hta.avgS ? `${hta.avgS}/${hta.avgD}` : "--/--";
 
-        const heartsSugg = document.getElementById('hearts-suggestion');
-        if (heartsSugg) {
+        const chipMeta = document.getElementById('chip-meta');
+        if (chipMeta) chipMeta.innerText = metas.metaPA.label;
+
+        const chipHearts = document.getElementById('chip-hearts');
+        if (chipHearts) {
             const h = e.evaluateManejoHTA(data);
-            const hStatus = document.getElementById('hearts-status');
-            const hFreq = document.getElementById('hearts-freq');
-            heartsSugg.innerText = h.sugerencia;
-            hFreq.innerText = h.frecuencia;
-            if (h.enMeta) {
-                hStatus.innerText = "EN META"; hStatus.className = "px-3 py-1 rounded-full bg-green-100 text-green-700 font-black text-[9px]";
-            } else {
-                hStatus.innerText = "FUERA DE META"; hStatus.className = "px-3 py-1 rounded-full bg-red-100 text-red-700 font-black text-[9px]";
+            chipHearts.innerText = h.enMeta ? "Sin ajustes" : h.pasoActual.label;
+            
+            // Side-effect: update existing hearts section if exists
+            const heartsSugg = document.getElementById('hearts-suggestion');
+            if (heartsSugg) {
+                const hStatus = document.getElementById('hearts-status');
+                const hFreq = document.getElementById('hearts-freq');
+                heartsSugg.innerText = h.sugerencia;
+                hFreq.innerText = h.frecuencia;
+                if (h.enMeta) {
+                    hStatus.innerText = "EN META"; hStatus.className = "px-3 py-1 rounded-full bg-green-100 text-green-700 font-black text-[9px]";
+                } else {
+                    hStatus.innerText = "FUERA DE META"; hStatus.className = "px-3 py-1 rounded-full bg-red-100 text-red-700 font-black text-[9px]";
+                }
             }
         }
 
-        const outText = document.getElementById('output-text');
-        if (outText) {
+        // Preview de la Nota
+        const preview = document.getElementById('output-preview');
+        if (preview) {
             const fullNote = window.APS.generator.generateText(data);
-            outText.value = window.APS.state.show_full_note ? fullNote : (fullNote.substring(0, 300) + "\n\n[...]");
+            preview.innerText = fullNote;
         }
     }
 };
