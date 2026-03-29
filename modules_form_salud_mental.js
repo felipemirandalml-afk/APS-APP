@@ -19,6 +19,7 @@ window.APS.formModules['salud-mental'] = {
                 <input type="number" name="edad" value="${window.APS.state.edad}" placeholder="Edad" class="w-full border p-3 rounded-xl">
                 <select name="sexo" class="w-full border p-3 rounded-xl"><option value="F" ${window.APS.state.sexo === 'F' ? 'selected' : ''}>Femenino</option><option value="M" ${window.APS.state.sexo === 'M' ? 'selected' : ''}>Masculino</option></select>
                 <textarea name="motivo_consulta_sm" class="w-full border p-3 rounded-xl h-24" placeholder="Motivo de consulta">${window.APS.state.motivo_consulta_sm}</textarea>
+                <textarea name="sintomas_sm" class="w-full border p-3 rounded-xl h-24" placeholder="Síntomas relevantes y evolución">${window.APS.state.sintomas_sm}</textarea>
             </div></div>`;
         if (tabId === 'tamizaje') return `
             <div class="space-y-6"><h2 class="font-display text-3xl font-bold">Tamizaje Psicológico</h2>
