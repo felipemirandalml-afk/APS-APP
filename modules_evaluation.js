@@ -114,13 +114,14 @@ window.APS.evaluation = {
         let methodLabel = "";
 
         if (numTomas === 3 && p2s && p3s) {
+            // Norma Chilena: Promedio de 2da y 3ra toma
             avgS = Math.round((p2s + p3s) / 2);
             avgD = Math.round((p2d + p3d) / 2);
             methodLabel = "Promedio de 2da y 3ra toma";
         } else if (numTomas === 2 && p1s && p2s) {
             avgS = Math.round((p1s + p2s) / 2);
             avgD = Math.round((p1d + p2d) / 2);
-            methodLabel = "Promedio de ambas tomas";
+            methodLabel = "Promedio de 1ra y 2da toma";
         } else if (p1s) {
             avgS = p1s;
             avgD = p1d;
@@ -134,19 +135,18 @@ window.APS.evaluation = {
 
         if (avgS >= 180 || avgD >= 110) {
             isSevere = true;
-            classification = "HTA Severa";
+            classification = "HTA Severa (Crisis)";
             if (data.danio_torax || data.danio_disnea || data.danio_neuro || data.danio_vision || data.danio_confusion || data.danio_cefalea) {
                 isEmergency = true;
                 classification = "SOSPECHA DE EMERGENCIA HIPERTENSIVA";
                 alerts.push("URGENTE: Derivación inmediata a centro de mayor complejidad.");
             } else {
-                alerts.push("HTA Severa sin emergencia: Ajustar fármacos VO. Evitar sublinguales.");
+                alerts.push("HTA Severa s/emergencia: Ajustar fármacos VO. Evitar sublinguales.");
             }
         } else if (avgS >= 140 || avgD >= 90) {
-            classification = "PA Elevada";
-            if (data.diagnostico_hta === 'pendiente') {
-                alerts.push("Requiere confirmación diagnóstica fuera de consulta.");
-            }
+            classification = "PA Elevada (HTA)";
+        } else if (avgS >= 130 || avgD >= 80) {
+            classification = "PA Limítrofe (Pre-HTA)";
         }
 
         return { avgS, avgD, classification, alerts, isEmergency, isSevere, methodLabel, numTomas };

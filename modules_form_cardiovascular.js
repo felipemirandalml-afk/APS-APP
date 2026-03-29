@@ -1,7 +1,7 @@
 window.APS.formModules = window.APS.formModules || {};
 
 window.APS.formModules.cardiovascular = {
-    sidebarSubtitle: 'Clinical Dashboard v2.0 · Cardiovascular',
+    sidebarSubtitle: 'Clinical Dashboard v2.1 · Cardiovascular',
     getTabs: () => [
         { id: 'datos', label: '👤 Datos Paciente', sub: 'Antropometría & Antecedentes' },
         { id: 'rcv', label: '📉 Riesgo CV', sub: 'Estratificación MinSal' },
@@ -17,12 +17,14 @@ window.APS.formModules.cardiovascular = {
         ante_obstetricos: false, menopausia_precoz: false, enf_autoinmune: false,
         vih: false, trastorno_mental: false, cac_elevado: false,
         cirugias_previas: '', farmacos_habituales: '', otros_diagnosticos: '',
-        pa1_s: null, pa1_d: null, pa2_s: null, pa2_d: null, show_pa2: false,
+        pa1_s: null, pa1_d: null, pa2_s: null, pa2_d: null, pa3_s: null, pa3_d: null, 
+        num_pa: 1, show_pa2: false, show_pa3: false,
         manejo_hta_paso: 0, examen_fisico: '', hallazgo_edema: false, hallazgo_crepitos: false, hallazgo_acantosis: false,
         ex_hematocrito: true, ex_orina: true, ex_glicemia: true, ex_electrolitos: true,
         ex_lipidos: true, ex_creatinina: true, ex_uricemia: true, ex_ecg: true,
         ex_rac: false, ex_hba1c: false, ex_fo: false, ind_farmacos: ''
     }),
+    
     renderTab: (tabId) => {
         const f = window.APS.formModules.cardiovascular;
         if (tabId === 'datos') return f.renderDatos();
@@ -31,56 +33,369 @@ window.APS.formModules.cardiovascular = {
         if (tabId === 'examenes') return f.renderExamenes();
         return f.renderNota();
     },
-    renderDatos: () => `
-        <div class="space-y-8"><header><h2 class="font-display text-3xl font-bold text-slate-900">Datos & Antropometría</h2></header>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Edad</label><input type="number" name="edad" value="${window.APS.state.edad}" class="w-full border p-3 rounded-xl"></div>
-                    <div><label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Sexo</label><select name="sexo" class="w-full border p-3 rounded-xl"><option value="F" ${window.APS.state.sexo === 'F' ? 'selected' : ''}>Femenino</option><option value="M" ${window.APS.state.sexo === 'M' ? 'selected' : ''}>Masculino</option></select></div>
+
+    renderDatos: () => {
+        const s = window.APS.state;
+        return `
+        <div class="space-y-6 animate-in fade-in duration-500">
+            <header><h2 class="font-display text-2xl font-black text-slate-900 tracking-tight">Datos del Paciente</h2></header>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Panel Antropometría -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Edad</label>
+                            <input type="number" name="edad" value="${s.edad}" class="w-full border-2 border-slate-50 p-3 rounded-xl focus:border-blue-500 outline-none transition-all font-bold">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Sexo</label>
+                            <select name="sexo" class="w-full border-2 border-slate-50 p-3 rounded-xl focus:border-blue-500 outline-none transition-all font-bold">
+                                <option value="F" ${s.sexo === 'F' ? 'selected' : ''}>Femenino</option>
+                                <option value="M" ${s.sexo === 'M' ? 'selected' : ''}>Masculino</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Peso (kg)</label>
+                            <input type="number" name="peso" value="${s.peso}" class="w-full border-2 border-slate-50 p-3 rounded-xl focus:border-blue-500 outline-none transition-all font-bold">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Talla (cm)</label>
+                            <input type="number" name="talla" value="${s.talla}" class="w-full border-2 border-slate-50 p-3 rounded-xl focus:border-blue-500 outline-none transition-all font-bold">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 items-end">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Perímetro Cintura</label>
+                            <input type="number" name="cintura" value="${s.cintura}" class="w-full border-2 border-slate-50 p-3 rounded-xl focus:border-blue-500 outline-none transition-all font-bold">
+                        </div>
+                        <div id="imc-card" class="bg-blue-600 rounded-2xl p-3 text-white text-center shadow-lg shadow-blue-200/50 h-[68px] flex flex-col justify-center">
+                            <p class="text-[9px] font-black uppercase opacity-70">IMC</p>
+                            <h4 id="imc-display-val" class="text-xl font-black">${s.imc || '--'}</h4>
+                            <div id="imc-desc" class="text-[8px] font-bold">Sin datos</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="grid grid-cols-2 gap-4"><div><label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Peso</label><input type="number" name="peso" value="${window.APS.state.peso}" class="w-full border p-3 rounded-xl"></div><div><label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Talla</label><input type="number" name="talla" value="${window.APS.state.talla}" class="w-full border p-3 rounded-xl"></div></div>
-                <div class="grid grid-cols-2 gap-4"><div><label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Cintura</label><input type="number" name="cintura" value="${window.APS.state.cintura}" class="w-full border p-3 rounded-xl"></div><div class="bg-blue-600 rounded-2xl p-4 text-white flex flex-col justify-center items-center"><p class="text-[8px]">IMC</p><h4 id="imc-display-val" class="text-2xl font-black">${window.APS.state.imc || '--'}</h4><p id="imc-desc" class="text-[8px]">Evaluando...</p></div></div>
+
+                <!-- Panel Antecedentes Compacto -->
+                <div class="lg:col-span-7 bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
+                    <h4 class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1">Comorbilidades Relevantes</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        ${window.APS.form.toggleCompact('hta', 'HTA')}
+                        ${window.APS.form.toggleCompact('dm2', 'Diabetes')}
+                        ${window.APS.form.toggleCompact('dislipidemia', 'DLP')}
+                        ${window.APS.form.toggleCompact('tabaquismo', 'Fumador')}
+                        ${window.APS.form.toggleCompact('erc_avanzada', 'ERC')}
+                        ${window.APS.form.toggleCompact('ecv_ateroesclerotica', 'ECV')}
+                    </div>
+                    <div class="mt-4">
+                        <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Otros Diagnósticos</label>
+                        <textarea name="otros_diagnosticos" class="w-full border-2 border-slate-50 p-3 rounded-xl focus:border-blue-500 outline-none transition-all text-sm h-12 mt-1" placeholder="Ej: Hipotiroidismo, Artrosis...">${s.otros_diagnosticos}</textarea>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4"><h4 class="text-[10px] font-black uppercase text-slate-400">Antecedentes</h4><div class="grid grid-cols-2 gap-2">${window.APS.form.toggleCompact('hta', 'Hipertensión')}${window.APS.form.toggleCompact('dm2', 'Diabetes T2')}${window.APS.form.toggleCompact('dislipidemia', 'Dislipidemia')}${window.APS.form.toggleCompact('tabaquismo', 'Tabaquismo')}${window.APS.form.toggleCompact('erc_avanzada', 'Enf. Renal C.')}${window.APS.form.toggleCompact('ecv_ateroesclerotica', 'Enf. Cardiovasc.')}</div><textarea name="otros_diagnosticos" class="w-full border p-3 rounded-xl h-16" placeholder="Otros diagnósticos">${window.APS.state.otros_diagnosticos}</textarea></div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="bg-white p-6 rounded-3xl border"><h4 class="text-[10px]">Cirugías Previas</h4><textarea name="cirugias_previas" class="w-full border p-4 rounded-2xl h-24">${window.APS.state.cirugias_previas}</textarea></div><div class="bg-white p-6 rounded-3xl border"><h4 class="text-[10px]">Fármacos de Uso Habitual</h4><textarea name="farmacos_habituales" class="w-full border p-4 rounded-2xl h-24">${window.APS.state.farmacos_habituales}</textarea></div></div></div>
-    `,
-    renderRCV: () => `<div class="space-y-8"><header class="flex justify-between"><div><h2 class="font-display text-3xl font-bold">Riesgo Cardiovascular</h2></div><div id="rcv-badge" class="px-8 py-3 rounded-2xl font-black text-sm text-white bg-slate-400">BAJO</div></header><div class="bg-white p-8 rounded-3xl border space-y-4">${window.APS.form.toggle('dm2','Diabetes Mellitus tipo 2')}${window.APS.form.toggle('ecv_ateroesclerotica','Enf. Cardiovascular Atero.')}${window.APS.form.toggle('erc_avanzada','ERC avanzada')}${window.APS.form.toggle('albuminuria_ms','Albuminuria mod/sev')}${window.APS.form.toggle('hta_refractaria','HTA Refractaria')}${window.APS.form.toggle('ldl_190','LDL > 190')}${window.APS.form.toggle('hipercolesterolemia_familiar','Hipercolesterolemia familiar')}${window.APS.form.toggle('af_ecv_prematura','AHF ECV Prematura')}${window.APS.form.toggle('ante_obstetricos','Ant. Obstétricos')}${window.APS.form.toggle('menopausia_precoz','Menopausia Precoz')}${window.APS.form.toggle('enf_autoinmune','Enf. Autoinmune')}${window.APS.form.toggle('vih','VIH')}${window.APS.form.toggle('trastorno_mental','Trastorno Mental Grave')}</div><div id="rcv-summary" class="bg-clinical-50 p-6 rounded-2xl border">Calculando fundamento clínico...</div></div>`,
-    renderManejo: () => `<div class="space-y-8"><header class="flex justify-between"><h2 class="font-display text-3xl font-bold">Manejo Clínico</h2><div id="hearts-status-badge" class="px-6 py-2 rounded-xl font-black text-[10px] uppercase">Evaluando...</div></header><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="bg-white p-8 rounded-3xl border space-y-4"><div class="flex gap-4"><input type="number" name="pa1_s" value="${window.APS.state.pa1_s || ''}" placeholder="PAS" class="w-1/2 border p-4 rounded-2xl"><input type="number" name="pa1_d" value="${window.APS.state.pa1_d || ''}" placeholder="PAD" class="w-1/2 border p-4 rounded-2xl"></div><div id="pa2-field" class="${window.APS.state.show_pa2 ? '' : 'hidden'} flex gap-4"><input type="number" name="pa2_s" value="${window.APS.state.pa2_s || ''}" placeholder="PAS 2" class="w-1/2 border p-4 rounded-2xl"><input type="number" name="pa2_d" value="${window.APS.state.pa2_d || ''}" placeholder="PAD 2" class="w-1/2 border p-4 rounded-2xl"></div><div class="flex gap-4"><button id="btn-add-pa" class="text-xs text-blue-600">+ Añadir Toma</button><button id="btn-rem-pa" class="${window.APS.state.show_pa2 ? '' : 'hidden'} text-xs text-red-500">Quitar Toma</button></div></div><div class="space-y-6"><div class="bg-white p-8 rounded-3xl border"><select name="manejo_hta_paso" class="text-xs border rounded p-2"><option value="0" ${window.APS.state.manejo_hta_paso == 0 ? 'selected' : ''}>Paso 0</option><option value="1" ${window.APS.state.manejo_hta_paso == 1 ? 'selected' : ''}>Paso 1</option><option value="2" ${window.APS.state.manejo_hta_paso == 2 ? 'selected' : ''}>Paso 2</option><option value="3" ${window.APS.state.manejo_hta_paso == 3 ? 'selected' : ''}>Paso 3</option><option value="4" ${window.APS.state.manejo_hta_paso == 4 ? 'selected' : ''}>Paso 4</option></select><p id="hearts-suggestion" class="mt-4 text-sm"></p><span id="hearts-freq" class="text-xs"></span><p id="meta-pa-lbl" class="text-xs mt-4"></p><p id="meta-ldl-lbl" class="text-xs"></p></div><div class="bg-white p-8 rounded-3xl border"><textarea name="examen_fisico" class="w-full border p-4 rounded-2xl h-24">${window.APS.state.examen_fisico}</textarea><div class="flex gap-2 mt-3">${window.APS.form.toggle('hallazgo_edema','Edema')}${window.APS.form.toggle('hallazgo_crepitos','Crépitos')}${window.APS.form.toggle('hallazgo_acantosis','Acantosis')}</div></div></div></div></div>`,
-    renderExamenes: () => `<div class="space-y-8"><h2 class="font-display text-3xl font-bold">Exámenes & Laboratorio</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="bg-white p-8 rounded-3xl border">${window.APS.form.toggle('ex_hematocrito','Hematocrito')}${window.APS.form.toggle('ex_orina','Orina Completa')}${window.APS.form.toggle('ex_glicemia','Glicemia Ayunas')}${window.APS.form.toggle('ex_electrolitos','Electrolitos Plasmáticos')}${window.APS.form.toggle('ex_lipidos','Perfil Lipídico')}${window.APS.form.toggle('ex_creatinina','Creatinina / VFG')}${window.APS.form.toggle('ex_uricemia','Uricemia')}${window.APS.form.toggle('ex_ecg','Electrocardiograma')}</div><div class="bg-blue-600 p-8 rounded-3xl">${window.APS.form.toggleWhite('ex_rac','RAC')}${window.APS.form.toggleWhite('ex_hba1c','HbA1c')}${window.APS.form.toggleWhite('ex_fo','Fondo de Ojo')}</div></div></div>`,
-    renderNota: () => `<div class="space-y-8 pb-20"><h2 class="font-display text-3xl font-bold">Nota & Plan Final</h2><div class="bg-white p-8 rounded-3xl border"><textarea name="ind_farmacos" class="w-full border p-6 rounded-3xl h-48" placeholder="Indicaciones adicionales">${window.APS.state.ind_farmacos}</textarea></div><div class="flex gap-4 justify-center p-8 bg-slate-950 rounded-[40px]"><button id="btn-toggle-modal" class="bg-slate-800 text-white font-bold py-4 px-8 rounded-2xl text-[10px]">Ver Completo</button><button id="btn-copy-main" class="bg-blue-600 text-white font-black py-4 px-10 rounded-2xl text-[10px]">Copiar Nota</button></div></div>`,
-    bindEvents: () => {
-        const btnAdd = document.getElementById('btn-add-pa');
-        if (btnAdd) btnAdd.addEventListener('click', () => { window.APS.state.show_pa2 = true; window.APS.form.render(); });
-        const btnRem = document.getElementById('btn-rem-pa');
-        if (btnRem) btnRem.addEventListener('click', () => { window.APS.state.show_pa2 = false; window.APS.form.render(); });
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
+                    <h4 class="text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Cirugías Previas</h4>
+                    <textarea name="cirugias_previas" class="w-full border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all text-sm h-24" placeholder="Describa cirugías relevantes...">${s.cirugias_previas}</textarea>
+                </div>
+                <div class="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
+                    <h4 class="text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Fármacos de Uso Diario</h4>
+                    <textarea name="farmacos_habituales" class="w-full border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all text-sm h-24" placeholder="Ej: Enalapril 10mg/12h, Metformina 850mg...">${s.farmacos_habituales}</textarea>
+                </div>
+            </div>
+        </div>`;
     },
+
+    renderRCV: () => {
+        const s = window.APS.state;
+        return `
+        <div class="space-y-6 animate-in fade-in duration-500">
+            <header class="flex justify-between items-center bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
+                <div>
+                    <h2 class="font-display text-2xl font-black text-slate-900 tracking-tight">Riesgo Cardiovascular</h2>
+                    <p class="text-xs text-slate-500 font-medium">Estratificación según guías locales</p>
+                </div>
+                <div id="rcv-badge" class="px-10 py-4 rounded-2xl font-black text-lg text-white bg-slate-400 shadow-xl transition-all duration-700">BAJO</div>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Criterios de Riesgo Alto Directo -->
+                <div class="md:col-span-2 bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm space-y-4">
+                    <h4 class="text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 border-b pb-2">Factores de Riesgo / Criterios Directos</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        ${window.APS.form.toggleCompact('albuminuria_ms', 'Albuminuria mod/sev')}
+                        ${window.APS.form.toggleCompact('hta_refractaria', 'HTA Refractaria')}
+                        ${window.APS.form.toggleCompact('ldl_190', 'LDL > 190 mg/dL')}
+                        ${window.APS.form.toggleCompact('hipercolesterolemia_familiar', 'Hipercolost. Familiar')}
+                        ${window.APS.form.toggleCompact('af_ecv_prematura', 'AHF ECV Prematura')}
+                        ${window.APS.form.toggleCompact('ante_obstetricos', 'Antecedentes Obstétricos')}
+                        ${window.APS.form.toggleCompact('menopausia_precoz', 'Menopausia Precoz')}
+                        ${window.APS.form.toggleCompact('enf_autoinmune', 'Enf. Autoinmune')}
+                        ${window.APS.form.toggleCompact('vih', 'Paciente VIH+')}
+                        ${window.APS.form.toggleCompact('trastorno_mental', 'Trastorno Mental Grave')}
+                    </div>
+                </div>
+
+                <!-- Resumen y Explicación -->
+                <div class="bg-clinical-50 p-7 rounded-[32px] border border-clinical-100 flex flex-col h-full">
+                    <h4 class="text-[10px] font-black uppercase text-clinical-600 mb-4 tracking-widest">Fundamento Clínico</h4>
+                    <div id="rcv-summary" class="text-sm text-clinical-900 font-medium leading-relaxed flex-grow">
+                        Calculando...
+                    </div>
+                    <div class="mt-6 p-4 bg-white/50 rounded-2xl border border-clinical-200/50">
+                        <p class="text-[9px] text-clinical-700 leading-tight">La clasificación se basa en la suma de factores y presencia de condiciones de riesgo directo según norma técnica ministerial.</p>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    },
+
+    renderManejo: () => {
+        const s = window.APS.state;
+        return `
+        <div class="space-y-6 animate-in fade-in duration-500">
+            <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h2 class="font-display text-2xl font-black text-slate-900 tracking-tight">Manejo Clínico</h2>
+                <div class="flex gap-2">
+                    <div id="hearts-status-badge" class="px-5 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest bg-slate-100 text-slate-500">Evaluando Meta...</div>
+                    <div id="hearts-step-label" class="px-5 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest bg-blue-100 text-blue-700">HEARTS: Paso ${s.manejo_hta_paso}</div>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Registro Presión Arterial (1/2/3 tomas) -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="bg-white p-7 rounded-[32px] border border-slate-200 shadow-sm space-y-6">
+                        <h4 class="text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Registro de Presión Arterial</h4>
+                        
+                        <div class="space-y-3">
+                            <!-- Toma 1 -->
+                            <div class="flex items-center gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                                <div class="text-[10px] font-black text-slate-400 w-8">#1</div>
+                                <div class="flex gap-2 flex-grow">
+                                    <input type="number" name="pa1_s" value="${s.pa1_s || ''}" placeholder="S" class="w-full border-b-2 border-slate-200 bg-transparent py-2 text-center text-lg font-bold focus:border-blue-500 outline-none">
+                                    <span class="text-slate-300 py-2">/</span>
+                                    <input type="number" name="pa1_d" value="${s.pa1_d || ''}" placeholder="D" class="w-full border-b-2 border-slate-200 bg-transparent py-2 text-center text-lg font-bold focus:border-blue-500 outline-none">
+                                </div>
+                            </div>
+
+                            <!-- Toma 2 -->
+                            <div id="pa2-field" class="${s.show_pa2 ? 'flex' : 'hidden'} items-center gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 animate-in slide-in-from-top-2 duration-300">
+                                <div class="text-[10px] font-black text-slate-400 w-8">#2</div>
+                                <div class="flex gap-2 flex-grow">
+                                    <input type="number" name="pa2_s" value="${s.pa2_s || ''}" placeholder="S" class="w-full border-b-2 border-slate-200 bg-transparent py-2 text-center text-lg font-bold focus:border-blue-500 outline-none">
+                                    <span class="text-slate-300 py-2">/</span>
+                                    <input type="number" name="pa2_d" value="${s.pa2_d || ''}" placeholder="D" class="w-full border-b-2 border-slate-200 bg-transparent py-2 text-center text-lg font-bold focus:border-blue-500 outline-none">
+                                </div>
+                            </div>
+
+                            <!-- Toma 3 -->
+                            <div id="pa3-field" class="${s.show_pa3 ? 'flex' : 'hidden'} items-center gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 animate-in slide-in-from-top-2 duration-300">
+                                <div class="text-[10px] font-black text-slate-400 w-8">#3</div>
+                                <div class="flex gap-2 flex-grow">
+                                    <input type="number" name="pa3_s" value="${s.pa3_s || ''}" placeholder="S" class="w-full border-b-2 border-slate-200 bg-transparent py-2 text-center text-lg font-bold focus:border-blue-500 outline-none">
+                                    <span class="text-slate-300 py-2">/</span>
+                                    <input type="number" name="pa3_d" value="${s.pa3_d || ''}" placeholder="D" class="w-full border-b-2 border-slate-200 bg-transparent py-2 text-center text-lg font-bold focus:border-blue-500 outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-[10px] font-black uppercase">
+                            <button id="btn-add-pa" class="${s.show_pa3 ? 'hidden' : 'text-blue-600 hover:text-blue-800'} transition-colors">+ Añadir Toma</button>
+                            <button id="btn-rem-pa" class="${s.show_pa2 ? 'text-red-500 hover:text-red-700' : 'hidden'} transition-colors">Quitar Toma</button>
+                            <div id="pa-avg-label" class="text-slate-400 italic">...</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-600 p-6 rounded-[32px] text-white shadow-xl shadow-blue-200">
+                        <h4 class="text-[10px] font-black uppercase opacity-60 mb-3 tracking-widest">Metas PSCV del Paciente</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-3 bg-white/10 rounded-2xl border border-white/10">
+                                <p class="text-[8px] font-black opacity-70 uppercase mb-1">Presión Arterial</p>
+                                <p id="meta-pa-lbl" class="text-lg font-black tracking-tight">--/--</p>
+                            </div>
+                            <div class="p-3 bg-white/10 rounded-2xl border border-white/10">
+                                <p class="text-[8px] font-black opacity-70 uppercase mb-1">Colesterol LDL</p>
+                                <p id="meta-ldl-lbl" class="text-lg font-black tracking-tight">-- mg/dL</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Algoritmo HEARTS y Examen Físico -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="bg-white p-7 rounded-[32px] border border-slate-200 shadow-sm space-y-5">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-[10px] font-black uppercase text-slate-400 ml-1">Algoritmo HEARTS</h4>
+                            <select name="manejo_hta_paso" class="text-[10px] font-black border-2 border-slate-50 rounded-xl px-4 py-2 bg-slate-50 transition-all outline-none focus:border-blue-500">
+                                <option value="0" ${s.manejo_hta_paso == 0 ? 'selected' : ''}>Paso 0: Estilo Vida</option>
+                                <option value="1" ${s.manejo_hta_paso == 1 ? 'selected' : ''}>Paso 1: Dual 1</option>
+                                <option value="2" ${s.manejo_hta_paso == 2 ? 'selected' : ''}>Paso 2: Dual 2</option>
+                                <option value="3" ${s.manejo_hta_paso == 3 ? 'selected' : ''}>Paso 3: Triple</option>
+                                <option value="4" ${s.manejo_hta_paso == 4 ? 'selected' : ''}>Paso 4: Resistente</option>
+                            </select>
+                        </div>
+                        <div id="hearts-panel" class="p-5 bg-slate-50 rounded-[28px] border border-slate-100 flex items-start gap-4">
+                            <div class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center shrink-0 text-white font-black">H</div>
+                            <div>
+                                <p id="hearts-suggestion" class="text-sm font-bold text-slate-800 leading-snug"></p>
+                                <p id="hearts-freq" class="text-[10px] font-black text-blue-600 uppercase mt-2 tracking-widest"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-7 rounded-[32px] border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="text-[10px] font-black uppercase text-slate-400 ml-1">Hallazgos Examen Físico</h4>
+                        <textarea name="examen_fisico" class="w-full border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all text-sm h-20" placeholder="Anote hallazgos relevantes de hoy...">${s.examen_fisico}</textarea>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                             ${window.APS.form.toggleCompact('hallazgo_edema', 'Edema')}
+                             ${window.APS.form.toggleCompact('hallazgo_crepitos', 'Crépitos')}
+                             ${window.APS.form.toggleCompact('hallazgo_acantosis', 'Acantosis')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    },
+
+    renderExamenes: () => {
+        const s = window.APS.state;
+        return `
+        <div class="space-y-6 animate-in fade-in duration-500">
+            <header>
+                <h2 class="font-display text-2xl font-black text-slate-900 tracking-tight">Exámenes de Laboratorio</h2>
+                <p class="text-xs text-slate-500 font-medium">Cribado anual y seguimiento según guías PSCV</p>
+            </header>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-7 rounded-[40px] border border-slate-200 shadow-sm space-y-6">
+                    <div class="border-b pb-3 mb-2">
+                        <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Batería Base PSCV</h4>
+                        <p class="text-[8px] text-slate-400 font-bold">Solicitados en ingreso o control anual</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        ${window.APS.form.toggleCompact('ex_hematocrito', 'Hematocrito')}
+                        ${window.APS.form.toggleCompact('ex_orina', 'Orina Completa')}
+                        ${window.APS.form.toggleCompact('ex_glicemia', 'Glicemia')}
+                        ${window.APS.form.toggleCompact('ex_electrolitos', 'Electrolitos')}
+                        ${window.APS.form.toggleCompact('ex_lipidos', 'Perfil Lipídico')}
+                        ${window.APS.form.toggleCompact('ex_creatinina', 'Creatinina / VFG')}
+                        ${window.APS.form.toggleCompact('ex_uricemia', 'Uricemia')}
+                        ${window.APS.form.toggleCompact('ex_ecg', 'ECG Reposo')}
+                    </div>
+                </div>
+
+                <div class="bg-blue-600 p-8 rounded-[40px] shadow-2xl shadow-blue-500/20 text-white space-y-6">
+                    <div class="border-b border-white/20 pb-3 mb-2">
+                        <h4 class="text-[10px] font-black uppercase text-blue-100 tracking-[0.2em]">Solicitud x Comorbilidad</h4>
+                        <p class="text-[8px] text-blue-200 font-bold">Activados automáticamente según diagnóstico</p>
+                    </div>
+                    <div class="space-y-3">
+                        ${window.APS.form.toggleWhite('ex_rac', 'RAC (Microalbuminuria/Crea)')}
+                        ${window.APS.form.toggleWhite('ex_hba1c', 'HbA1c (Diabetes)')}
+                        ${window.APS.form.toggleWhite('ex_fo', 'Fondo de Ojo')}
+                    </div>
+                    <div class="mt-8 p-5 bg-white/10 rounded-[28px] border border-white/10">
+                        <p class="text-[9px] font-medium leading-relaxed italic opacity-80 underline underline-offset-4 decoration-white/20">Nota: RAC es obligatorio en DM2 e HTA con alto riesgo. Fondo de Ojo es anual en DM2.</p>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    },
+
+    renderNota: () => {
+        const s = window.APS.state;
+        return `
+        <div class="space-y-6 animate-in fade-in duration-500 pb-16">
+            <header>
+                <h2 class="font-display text-2xl font-black text-slate-900 tracking-tight">Cierre de Consulta</h2>
+            </header>
+            
+            <div class="bg-white p-7 rounded-[40px] border border-slate-200 shadow-sm space-y-5">
+                <h4 class="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">Plan & Indicaciones No Farmacológicas</h4>
+                <textarea name="ind_farmacos" class="w-full border-2 border-slate-50 p-6 rounded-[32px] focus:border-blue-500 outline-none transition-all text-sm h-48 bg-slate-50/30" placeholder="Anote indicaciones específicas, cambios de dosis, derivaciones o acuerdos con el paciente...">${s.ind_farmacos}</textarea>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 items-center justify-center p-12 bg-slate-900 rounded-[48px] shadow-2xl relative overflow-hidden">
+                <!-- Decoración -->
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-clinical-600/10 rounded-full blur-3xl"></div>
+                
+                <button id="btn-toggle-modal" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-300 font-black py-4 px-10 rounded-2xl text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-3">
+                    <span class="text-xl">👁️</span> Ver Nota Completa
+                </button>
+                <button id="btn-copy-main" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-black py-4 px-12 rounded-2xl text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-xl shadow-blue-500/20 flex items-center justify-center gap-3 border-b-4 border-blue-800">
+                    <span class="text-2xl">📋</span> Copiar al Portapapeles
+                </button>
+            </div>
+        </div>`;
+    },
+
+    bindEvents: () => {
+        const s = window.APS.state;
+        
+        const btnAdd = document.getElementById('btn-add-pa');
+        if (btnAdd) btnAdd.addEventListener('click', () => { 
+            if (!s.show_pa2) s.show_pa2 = true;
+            else if (!s.show_pa3) s.show_pa3 = true;
+            window.APS.form.render(); 
+        });
+
+        const btnRem = document.getElementById('btn-rem-pa');
+        if (btnRem) btnRem.addEventListener('click', () => { 
+            if (s.show_pa3) s.show_pa3 = false;
+            else if (s.show_pa2) s.show_pa2 = false;
+            window.APS.form.render(); 
+        });
+    },
+
     updateOutput: (data) => {
         const e = window.APS.evaluation;
         const rcv = !isNaN(parseInt(data.edad)) ? e.calculateRCV(data) : { level: '-', reason: 'Calculando...' };
         const metas = e.getPSCVMeta(data);
+        const htaRes = e.evaluateHTA(data);
+        
+        // RCV UI
         const rcvBadge = document.getElementById('rcv-badge');
         if (rcvBadge) {
             rcvBadge.innerText = (rcv.level || '-').toUpperCase();
-            rcvBadge.className = `px-8 py-3 rounded-2xl font-black text-sm text-white ${rcv.level === 'Alto' ? 'bg-red-600' : (rcv.level === 'Moderado' ? 'bg-amber-500' : 'bg-emerald-500')}`;
+            rcvBadge.className = `px-10 py-4 rounded-2xl font-black text-lg text-white shadow-xl transition-all ${rcv.level === 'Alto' ? 'bg-red-600 scale-105' : (rcv.level === 'Moderado' ? 'bg-amber-500' : 'bg-emerald-500')}`;
         }
         const rcvSumm = document.getElementById('rcv-summary');
-        if (rcvSumm) rcvSumm.innerText = rcv.reason || 'Sin factores calculados.';
+        if (rcvSumm) rcvSumm.innerText = (rcv.reason || 'Sin factores calculados.') + (rcv.note ? `. ${rcv.note}` : '');
+
+        // PA UI
         const metaPA = document.getElementById('meta-pa-lbl');
         const metaLDL = document.getElementById('meta-ldl-lbl');
-        if (metaPA) metaPA.innerText = `${metas.metaPA.label} mmHg`;
-        if (metaLDL) metaLDL.innerText = `< ${metas.metaLDL} mg/dL`;
+        if (metaPA) metaPA.innerText = `${metas.metaPA.s}/${metas.metaPA.d}`;
+        if (metaLDL) metaLDL.innerText = `${metas.metaLDL} mg/dL`;
+        
+        const avgLbl = document.getElementById('pa-avg-label');
+        if (avgLbl) {
+            avgLbl.innerText = htaRes.avgS > 0 ? `Prom.: ${htaRes.avgS}/${htaRes.avgD}` : '...';
+            if (htaRes.avgS >= metas.metaPA.s || htaRes.avgD >= metas.metaPA.d) avgLbl.classList.add('text-red-500');
+            else avgLbl.classList.remove('text-red-500');
+        }
+
+        // HEARTS UI
         const heartsSugg = document.getElementById('hearts-suggestion');
         if (heartsSugg) {
             const h = e.evaluateManejoHTA(data);
             const hStatus = document.getElementById('hearts-status-badge');
             const hFreq = document.getElementById('hearts-freq');
+            const hStepLabel = document.getElementById('hearts-step-label');
+            
             heartsSugg.innerText = h.sugerencia;
-            if (hFreq) hFreq.innerText = h.frecuencia;
+            if (hFreq) hFreq.innerText = `Próximo Control: ${h.frecuencia}`;
+            if (hStepLabel) hStepLabel.innerText = `HEARTS: ${h.pasoActual.label}`;
+            
             if (hStatus) {
                 hStatus.innerText = h.enMeta ? 'EN META' : 'FUERA DE META';
-                hStatus.className = `px-6 py-2 rounded-xl font-black text-[10px] uppercase ${h.enMeta ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+                hStatus.className = `px-5 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${h.enMeta ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
             }
         }
     }

@@ -148,8 +148,9 @@ window.APS.form = {
         if (btnCopyMain) btnCopyMain.addEventListener('click', () => {
             const text = window.APS.generator.generateText(window.APS.state);
             window.APS.helpers.copyToClipboard(text);
-            btnCopyMain.innerText = '¡COPIADO!';
-            setTimeout(() => btnCopyMain.innerText = 'COPIAR NOTA', 1500);
+            const originalHtml = btnCopyMain.innerHTML;
+            btnCopyMain.innerHTML = '<span class="text-xl">✅</span> ¡COPIADO!';
+            setTimeout(() => btnCopyMain.innerHTML = originalHtml, 1500);
         });
 
         const btnCopyMod = document.getElementById('btn-copy-modal');
