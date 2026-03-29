@@ -22,9 +22,10 @@ window.APS.form = {
             };
         }
 
-        const tabs = moduleDef.getTabs();
+        const tabs = typeof moduleDef.getTabs === 'function' ? moduleDef.getTabs() : [];
         const sidebarContainer = document.getElementById('sidebar-container');
         const appContainer = document.getElementById('app-container');
+        if (!sidebarContainer || !appContainer || tabs.length === 0) return;
 
         sidebarContainer.innerHTML = `
             <aside class="w-full lg:w-72 lg:fixed lg:h-screen bg-slate-900 text-white flex flex-col border-r border-slate-800 z-50">
@@ -43,7 +44,7 @@ window.APS.form = {
         appContainer.innerHTML = `
             ${tabs.map(tab => `
                 <div id="tab-${tab.id}" class="tab-content ${window.APS.state.activeTab === tab.id ? '' : 'hidden'}">
-                    ${moduleDef.renderTab(tab.id)}
+                    ${typeof moduleDef.renderTab === 'function' ? moduleDef.renderTab(tab.id) : ''}
                 </div>
             `).join('')}
             ${window.APS.form.renderModal()}
