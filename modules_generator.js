@@ -1,6 +1,9 @@
 // modules_generator.js
 window.APS.generator = {
     generateText: (data) => {
+        if (data.module === 'salud-mental') return window.APS.generator.generateMentalText(data);
+        if (data.module === 'morbilidad') return window.APS.generator.generateMorbilidadText(data);
+
         const h = window.APS.helpers;
         const e = window.APS.evaluation;
         const isCV = data.module === 'cardiovascular';
@@ -144,4 +147,64 @@ window.APS.generator = {
         if (data.examen_fisico?.trim()) res += ` Además, destaca: ${h.formatClinicalText(data.examen_fisico)}`;
         return res;
     }
+
+,
+
+    generateMentalText: (data) => {
+        const h = window.APS.helpers;
+        const flags = [];
+        if (data.ansiedad_sm) flags.push('síntomas ansiosos');
+        if (data.depresion_sm) flags.push('síntomas depresivos');
+        return `=== NOTA CLÍNICA - SALUD MENTAL (${data.type.toUpperCase()}) ===
+
+` +
+            `[MOTIVO CONSULTA]
+${h.formatClinicalText(data.motivo_consulta_sm) || 'Sin motivo consignado.'}
+
+` +
+            `[TAMIZAJE]
+Paciente de ${data.edad || '--'} años, sexo ${data.sexo || '--'}. ` +
+            `Se pesquisan ${flags.join(' y ') || 'sin síntomas predominantes en tamizaje inicial'}. ` +
+            `Sueño ${data.sueno_sm || 'no consignado'}, apetito ${data.apetito_sm || 'no consignado'}. ` +
+            `Riesgo suicida: ${data.riesgo_suicida_sm || 'no evaluado'}.
+
+` +
+            `[PLAN]
+Red de apoyo: ${h.formatClinicalText(data.red_apoyo_sm) || 'No descrita.'}
+` +
+            `${h.formatClinicalText(data.plan_sm) || 'Se indica seguimiento en controles de salud mental APS.'}
+` +
+            `${h.formatClinicalText(data.ind_farmacos) || ''}`;
+    },
+
+    generateMorbilidadText: (data) => {
+        const h = window.APS.helpers;
+        const sintomas = [];
+        if (data.fiebre_morb) sintomas.push('fiebre');
+        if (data.tos_morb) sintomas.push('tos');
+        if (data.disnea_morb) sintomas.push('disnea');
+        return `=== NOTA CLÍNICA - MORBILIDAD (${data.type.toUpperCase()}) ===
+
+` +
+            `[ANAMNESIS]
+Paciente de ${data.edad || '--'} años, sexo ${data.sexo || '--'}. ` +
+            `Motivo: ${h.formatClinicalText(data.motivo_morb) || 'Sin motivo consignado.'} ` +
+            `Síntomas principales: ${sintomas.join(', ') || 'no referidos en checklist'}. ` +
+            `${h.formatClinicalText(data.sintomas_morb) || ''}
+
+` +
+            `[EXAMEN FÍSICO]
+${h.formatClinicalText(data.examen_morb) || 'Sin hallazgos relevantes consignados.'}
+
+` +
+            `[IMPRESIÓN DIAGNÓSTICA]
+${h.formatClinicalText(data.diagnostico_morb) || 'Diagnóstico en evaluación.'}
+
+` +
+            `[PLAN]
+${h.formatClinicalText(data.plan_morb) || 'Manejo sintomático, signos de alarma y control según evolución.'}
+` +
+            `${h.formatClinicalText(data.ind_farmacos) || ''}`;
+    }
+
 };
