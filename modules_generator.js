@@ -12,16 +12,39 @@ window.APS.generator = {
         text += `[EV CLÍNICA]\n`;
         text += `Paciente de ${data.edad || '--'} años, sexo ${data.sexo || '--'}.\n`;
         if (data.peso && data.talla) {
-            text += `Peso: ${data.peso} kg, Talla: ${data.talla} cm (IMC ${data.imc || '--'}). `;
+            text += `Antropometría: Peso: ${data.peso} kg, Talla: ${data.talla} cm (IMC ${data.imc || '--'}). `;
             if (data.cintura) text += `Cintura: ${data.cintura} cm.`;
             text += `\n`;
+        }
+
+        // ANTECEDENTES MÓRBIDOS
+        const coMorbs = [];
+        if (data.hta) coMorbs.push("HTA");
+        if (data.dm2) coMorbs.push("DM2");
+        if (data.dislipidemia) coMorbs.push("dislipidemia");
+        if (data.tabaquismo) coMorbs.push("tabaquismo");
+        if (data.erc_avanzada) coMorbs.push("ERC");
+        if (data.ecv_ateroesclerotica) coMorbs.push("ECV ateroesclerótica");
+        
+        text += `Comorbilidades: ${coMorbs.length > 0 ? coMorbs.join(", ") : "no se registran"}.\n`;
+        
+        if (data.cirugias_previas?.trim()) {
+            text += `Cirugías previas: ${h.formatClinicalText(data.cirugias_previas)}\n`;
+        } else {
+            text += `Cirugías previas: sin antecedentes quirúrgicos consignados.\n`;
+        }
+
+        if (data.farmacos_habituales?.trim()) {
+            text += `Fármacos de uso habitual: ${h.formatClinicalText(data.farmacos_habituales)}\n`;
+        } else {
+            text += `Fármacos de uso habitual: no referidos.\n`;
         }
         
         if (isCV) {
             const rcv = e.calculateRCV(data);
             const { metaPA, metaLDL } = e.getPSCVMeta(data);
-            text += `RCV: ${rcv.level.toUpperCase()} (${rcv.method}). Fundamento: ${rcv.reason}.\n`;
-            text += `Meta PA: ${metaPA.label}. Meta LDL: < ${metaLDL} mg/dL.\n`;
+            text += `\nESTRATIFICACIÓN RCV: ${rcv.level.toUpperCase()} (${rcv.method}). Fundamento: ${rcv.reason}.\n`;
+            text += `Metas PSCV: Meta PA: ${metaPA.label}. Meta LDL: < ${metaLDL} mg/dL.\n`;
         }
         
         // 2. EXAMEN FÍSICO (Lógica segmentaria)

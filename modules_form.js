@@ -15,6 +15,9 @@ window.APS.form = {
                 tabaquismo: false, hta: false, dislipidemia: false, af_ecv_prematura: false,
                 ante_obstetricos: false, menopausia_precoz: false, enf_autoinmune: false,
                 vih: false, trastorno_mental: false, cac_elevado: false,
+                // Nuevos Antecedentes
+                cirugias_previas: '',
+                farmacos_habituales: '',
                 // Manejo Clínico
                 pa1_s: null, pa1_d: null, pa2_s: null, pa2_d: null, show_pa2: false,
                 manejo_hta_paso: 0, examen_fisico: '',
@@ -43,7 +46,7 @@ window.APS.form = {
                 
                 <nav class="flex-grow py-6 overflow-y-auto">
                     <ul class="space-y-1 px-4">
-                        ${window.APS.form.createNavItem('datos', '👤 Datos Paciente', 'Antropometría básica')}
+                        ${window.APS.form.createNavItem('datos', '👤 Datos Paciente', 'Antropometría & Antecedentes')}
                         ${window.APS.form.createNavItem('rcv', '📉 Riesgo CV', 'Estratificación MinSal')}
                         ${window.APS.form.createNavItem('manejo', '🩺 Manejo Clínico', 'PA & Algoritmo HEARTS')}
                         ${window.APS.form.createNavItem('examenes', '📋 Exámenes PSCV', 'Laboratorio & Cribado')}
@@ -108,10 +111,11 @@ window.APS.form = {
             <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <header>
                     <h2 class="font-display text-3xl font-bold text-slate-900">Datos & Antropometría</h2>
-                    <p class="text-slate-500 text-sm mt-1">Ingreso de parámetros básicos de evaluación.</p>
+                    <p class="text-slate-500 text-sm mt-1">Anamnesis inicial y parámetros físicos.</p>
                 </header>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- CARD 1: ANTROPOMETRÍA -->
                     <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
                         <div class="grid grid-cols-2 gap-4">
                             <div><label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Edad</label>
@@ -128,15 +132,44 @@ window.APS.form = {
                             <div><label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Talla (cm)</label>
                                  <input type="number" name="talla" value="${window.APS.state.talla}" class="w-full border border-slate-200 bg-slate-50 p-3 rounded-xl font-bold text-slate-900 outline-none"></div>
                         </div>
-                        <div><label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Cintura (cm)</label>
-                             <input type="number" name="cintura" value="${window.APS.state.cintura}" class="w-full border border-slate-200 bg-slate-50 p-3 rounded-xl font-bold text-slate-900 outline-none"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="col-span-1"><label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Cintura (cm)</label>
+                                 <input type="number" name="cintura" value="${window.APS.state.cintura}" class="w-full border border-slate-200 bg-slate-50 p-3 rounded-xl font-bold text-slate-900 outline-none">
+                            </div>
+                            <!-- COMPACT IMC CARD -->
+                            <div class="bg-blue-600 rounded-2xl p-4 text-white flex flex-col justify-center items-center shadow-lg">
+                                <p class="text-[8px] font-black uppercase opacity-60 mb-1">IMC</p>
+                                <h4 id="imc-display-val" class="font-display text-2xl font-black">${window.APS.state.imc || '--'}</h4>
+                                <p id="imc-desc" class="text-[8px] font-bold bg-white/20 px-2 py-0.5 rounded-full uppercase mt-1">Evaluando...</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-blue-600 to-blue-800 p-8 rounded-3xl shadow-xl flex flex-col justify-center items-center text-center text-white relative overflow-hidden group">
-                        <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <p class="text-xs font-bold uppercase tracking-widest opacity-60 mb-2">Índice de Masa Corporal (IMC)</p>
-                        <h3 id="imc-display-val" class="font-display text-7xl font-black mb-2 tracking-tighter">${window.APS.state.imc || '--'}</h3>
-                        <p id="imc-desc" class="text-xs font-bold bg-white/10 px-4 py-1 rounded-full uppercase tracking-tight">Evaluando...</p>
+                    <!-- CARD 2: ANTECEDENTES MÓRBIDOS -->
+                    <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-50 pb-2">Antecedentes Mórbidos</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            ${window.APS.form.toggleCompact('hta', 'Hipertensión')}
+                            ${window.APS.form.toggleCompact('dm2', 'Diabetes T2')}
+                            ${window.APS.form.toggleCompact('dislipidemia', 'Dislipidemia')}
+                            ${window.APS.form.toggleCompact('tabaquismo', 'Tabaquismo')}
+                            ${window.APS.form.toggleCompact('erc_avanzada', 'Enf. Renal C.')}
+                            ${window.APS.form.toggleCompact('ecv_ateroesclerotica', 'Enf. Cardiovasc.')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- CARD 3: CIRUGÍAS -->
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-50 pb-2">Cirugías Previas</h4>
+                        <textarea name="cirugias_previas" placeholder="Ej: apendicectomía, cesárea, colecistectomía..." class="w-full border-2 border-slate-50 bg-slate-50/50 p-4 rounded-2xl h-24 text-xs font-medium focus:border-blue-400 outline-none transition-all">${window.APS.state.cirugias_previas}</textarea>
+                    </div>
+
+                    <!-- CARD 4: FÁRMACOS -->
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-50 pb-2">Fármacos de Uso Habitual</h4>
+                        <textarea name="farmacos_habituales" placeholder="Ej: losartán 50 mg, metformina 850 mg c/12h..." class="w-full border-2 border-slate-50 bg-slate-50/50 p-4 rounded-2xl h-24 text-xs font-medium focus:border-blue-400 outline-none transition-all">${window.APS.state.farmacos_habituales}</textarea>
                     </div>
                 </div>
             </div>
@@ -159,7 +192,7 @@ window.APS.form = {
                         <h4 class="text-[10px] font-black uppercase text-red-500 tracking-widest border-b border-red-50 pb-2">Criterios de Riesgo Alto Directo</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             ${window.APS.form.toggle('dm2', 'Diabetes Mellitus tipo 2')}
-                            ${window.APS.form.toggle('ecv_ateroesclerotica', 'ECV Ateroesclerótica')}
+                            ${window.APS.form.toggle('ecv_ateroesclerotica', 'Enf. Cardiovascular Atero.')}
                             ${window.APS.form.toggle('erc_avanzada', 'ERC avanzada (Etapa 3 a 5)')}
                             ${window.APS.form.toggle('albuminuria_ms', 'Albuminuria mod/sev (RAC > 30)')}
                             ${window.APS.form.toggle('hta_refractaria', 'HTA Refractaria')}
@@ -387,6 +420,16 @@ window.APS.form = {
         `;
     },
 
+    toggleCompact: (name, label) => {
+        const checked = window.APS.state[name];
+        return `
+            <label class="flex items-center justify-between p-3 rounded-xl border-2 transition-all cursor-pointer group select-none ${checked ? 'border-blue-100 bg-blue-50/50' : 'border-slate-50 bg-slate-50/30 hover:border-slate-200'}">
+                <span class="text-[10px] font-bold text-slate-600 group-hover:text-blue-600 transition-colors">${label}</span>
+                <input type="checkbox" name="${name}" class="w-4 h-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${checked ? 'checked' : ''}>
+            </label>
+        `;
+    },
+
     toggleWhite: (name, label) => {
         const checked = window.APS.state[name];
         return `
@@ -487,7 +530,7 @@ window.APS.form = {
         if (imcDesc) {
             const cat = window.APS.helpers.getIMCCategory(data.imc, data.edad);
             imcDesc.innerText = cat.label;
-            imcDesc.className = `text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-tight ${cat.color === 'red' ? 'bg-red-500' : (cat.color === 'yellow' ? 'bg-amber-400' : 'bg-green-400')}`;
+            imcDesc.className = `text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-tight mt-1 ${cat.color === 'red' ? 'bg-red-500' : (cat.color === 'yellow' ? 'bg-amber-400' : 'bg-green-400')}`;
         }
 
         // RCV
