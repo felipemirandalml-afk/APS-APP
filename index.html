@@ -3,17 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>APS Indications Copilot</title>
+    <title>APS Copilot | Clinical Dashboard</title>
+    <!-- Google Fonts: Inter & Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        clinical: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            600: '#0284c7', // Medical Blue
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f8fafc; overflow-x: hidden; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .tab-active { @apply bg-clinical-100 text-clinical-700 font-bold border-r-4 border-clinical-600 shadow-sm; }
+        .sidebar { transition: width 0.3s ease-in-out; }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans p-2 md:p-4 min-h-screen">
-    <div class="max-w-[95%] lg:max-w-screen-2xl mx-auto bg-white p-4 md:p-8 rounded-2xl shadow-xl min-h-[90vh]">
-        <header class="mb-8 border-b pb-6 flex justify-between items-center">
-            <h1 class="text-3xl font-black text-blue-700 tracking-tight">🩺 APS Indications Copilot</h1>
-            <button id="btn-home" class="hidden text-base bg-gray-100 font-bold hover:bg-gray-200 px-4 py-2 rounded-xl transition-all">Volver al Inicio</button>
-        </header>
+<body class="text-slate-800 antialiased min-h-screen">
+    <!-- LAYOUT PRINCIPAL -->
+    <div id="main-layout" class="flex flex-col lg:flex-row min-h-screen">
+        <!-- SIDEBAR DINÁMICO (Vía JS) -->
+        <div id="sidebar-container"></div>
 
-        <div id="app-container"></div>
+        <!-- PANEL CENTRAL DINÁMICO (Vía JS) -->
+        <main class="flex-grow p-4 lg:p-10 lg:ml-72 bg-[#fcfdfe]">
+            <div id="app-container" class="max-w-6xl mx-auto"></div>
+        </main>
     </div>
 
     <script>window.APS = { state: {} };</script>

@@ -9,24 +9,26 @@ window.APS.helpers = {
     copyToClipboard: async (text) => {
         try {
             await navigator.clipboard.writeText(text);
-            alert("¡Copiado al portapapeles!");
         } catch (err) {
-            alert("Error al copiar.");
+            console.error("Error al copiar portapapeles.");
         }
     },
 
-    // Formatea el texto clínico: capitaliza y asegura punto final
     formatClinicalText: (str) => {
         if (!str || typeof str !== 'string') return "";
         let s = str.trim();
         if (s.length === 0) return "";
-        
-        // Capitalizar primera letra
         s = s.charAt(0).toUpperCase() + s.slice(1);
-        
-        // Asegurar punto final si no tiene ya puntuación final (. ! ?)
         if (!/[.!?]$/.test(s)) s += ".";
-        
         return s;
+    },
+
+    getIMCCategory: (imc, age) => {
+        const val = parseFloat(imc);
+        if (!val || val === 0) return { label: 'Sin datos', color: 'gray' };
+        if (val < 18.5) return { label: 'Bajo Peso', color: 'yellow' };
+        if (val < 25) return { label: 'Normal', color: 'green' };
+        if (val < 30) return { label: 'Sobrepeso', color: 'yellow' };
+        return { label: 'Obesidad', color: 'red' };
     }
 };

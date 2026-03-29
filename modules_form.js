@@ -1,329 +1,474 @@
 // modules_form.js
 window.APS.form = {
     render: (moduleName, typeName) => {
-        window.APS.state = { 
-            module: moduleName, 
-            type: typeName, 
-            show_exam: false, 
-            rcv: 'Bajo', 
-            diagnostico_hta: 'pendiente',
-            show_pa2: false, 
-            show_pa3: false,
-            show_danio: false,
-            examen_fisico: '',
-            peso: 0,
-            talla: 0,
-            cintura: 0,
-            hallazgo_edema: false,
-            hallazgo_edema_tipo: 'bilateral',
-            hallazgo_crepitos: false,
-            hallazgo_crepitos_tipo: 'bilateral',
-            hallazgo_acantosis: false,
-            // Exámenes iniciales
-            ex_hematocrito: true,
-            ex_orina: true,
-            ex_glicemia: true,
-            ex_electrolitos: true,
-            ex_lipidos: true,
-            ex_creatinina: true,
-            ex_uricemia: true,
-            ex_ecg: true,
-            ex_rac: false,
-            ex_hba1c: false,
-            ex_fo: false,
-            ex_tsh: false,
-            ex_calcio: false,
-            manejo_hta_paso: 0,
-            // Riesgo Cardiovascular
-            dm2: false,
-            ecv_ateroesclerotica: false,
-            erc_avanzada: false,
-            albuminuria_ms: false,
-            hta_refractaria: false,
-            ldl_190: false,
-            hipercolesterolemia_familiar: false,
-            tabaquismo: false,
-            hta: false,
-            dislipidemia: false,
-            af_ecv_prematura: false,
-            ante_obstetricos: false,
-            menopausia_precoz: false,
-            enf_autoinmune: false,
-            vih: false,
-            trastorno_mental: false,
-            cac_elevado: false,
-            // UI State
-            show_modal: false
-        };
+        // Inicializar estado preservando TODA la lógica clínica previa
+        if (!window.APS.state.module) {
+            window.APS.state = { 
+                module: moduleName, 
+                type: typeName, 
+                activeTab: 'datos',
+                // Datos Antropometría
+                edad: 0, sexo: 'F', peso: 0, talla: 0, cintura: 0, imc: 0,
+                // Riesgo Cardiovascular
+                dm2: false, ecv_ateroesclerotica: false, erc_avanzada: false, albuminuria_ms: false,
+                hta_refractaria: false, ldl_190: false, hipercolesterolemia_familiar: false,
+                tabaquismo: false, hta: false, dislipidemia: false, af_ecv_prematura: false,
+                ante_obstetricos: false, menopausia_precoz: false, enf_autoinmune: false,
+                vih: false, trastorno_mental: false, cac_elevado: false,
+                // Manejo Clínico
+                pa1_s: null, pa1_d: null, pa2_s: null, pa2_d: null, show_pa2: false,
+                manejo_hta_paso: 0, examen_fisico: '',
+                hallazgo_edema: false, hallazgo_crepitos: false, hallazgo_acantosis: false,
+                // Exámenes
+                ex_hematocrito: true, ex_orina: true, ex_glicemia: true, ex_electrolitos: true,
+                ex_lipidos: true, ex_creatinina: true, ex_uricemia: true, ex_ecg: true,
+                ex_rac: false, ex_hba1c: false, ex_fo: false,
+                // Indicaciones manuales
+                ind_farmacos: '',
+                // UI State
+                show_modal: false
+            };
+        }
+
+        const sidebarContainer = document.getElementById('sidebar-container');
+        const appContainer = document.getElementById('app-container');
         
-        const container = document.getElementById('app-container');
-        const isCV = moduleName === 'cardiovascular';
-        const isIngreso = typeName === 'ingreso';
-        
-        container.innerHTML = `
-            <div class="max-w-4xl mx-auto pb-32">
-                <!-- FORMULARIO ÚNICO -->
-                <form id="clinical-form" class="space-y-10">
-                    <h2 class="text-2xl font-black border-b pb-2 text-indigo-700 font-mono italic">🩺 Datos & Antropometría</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-6 bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm text-sm font-bold text-gray-400">
-                        <div>Edad<input type="number" name="edad" value="0" class="w-full border-2 p-3 rounded-xl text-base text-indigo-900 focus:border-indigo-300 outline-none"></div>
-                        <div>Sexo<select name="sexo" class="w-full border-2 p-3 rounded-xl text-base text-indigo-900 focus:border-indigo-300 outline-none"><option value="F">Fem</option><option value="M">Masc</option></select></div>
-                        <div>IMC<input type="text" id="imc-display" readonly class="w-full border-2 p-3 rounded-xl bg-gray-50 font-mono text-base text-indigo-900" value="--"></div>
-                        <div>Peso (kg)<input type="number" name="peso" class="w-full border-2 p-3 rounded-xl text-base text-indigo-900 focus:border-indigo-300 outline-none"></div>
-                        <div>Talla (cm)<input type="number" name="talla" class="w-full border-2 p-3 rounded-xl text-base text-indigo-900 focus:border-indigo-300 outline-none"></div>
-                        <div>Cintura (cm)<input type="number" name="cintura" class="w-full border-2 p-3 rounded-xl text-base text-indigo-900 focus:border-indigo-300 outline-none"></div>
-                    </div>
+        // Renderizar Sidebar
+        sidebarContainer.innerHTML = `
+            <aside class="w-full lg:w-72 lg:fixed lg:h-screen bg-slate-900 text-white flex flex-col border-r border-slate-800 z-50">
+                <div class="p-8 border-b border-slate-800">
+                    <h1 class="font-display font-black text-xl tracking-tighter text-blue-400">APS COPILOT</h1>
+                    <p class="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">Clinical Dashboard v2.0</p>
+                </div>
+                
+                <nav class="flex-grow py-6 overflow-y-auto">
+                    <ul class="space-y-1 px-4">
+                        ${window.APS.form.createNavItem('datos', '👤 Datos Paciente', 'Antropometría básica')}
+                        ${window.APS.form.createNavItem('rcv', '📉 Riesgo CV', 'Estratificación MinSal')}
+                        ${window.APS.form.createNavItem('manejo', '🩺 Manejo Clínico', 'PA & Algoritmo HEARTS')}
+                        ${window.APS.form.createNavItem('examenes', '📋 Exámenes PSCV', 'Laboratorio & Cribado')}
+                        ${window.APS.form.createNavItem('nota', '📝 Nota Final', 'Generación de reporte')}
+                    </ul>
+                </nav>
 
-                    ${isCV ? `
-                    <!-- RCV DETALLADO -->
-                    <div id="rcv-section" class="bg-indigo-50 p-10 rounded-[48px] border-2 border-indigo-200">
-                        <div class="flex justify-between items-center mb-8">
-                            <h3 class="font-black text-indigo-900 uppercase text-xs tracking-widest">RCV Chileno Automático</h3>
-                            <div id="rcv-badge" class="px-6 py-2 rounded-full font-black text-xs text-white bg-green-500 shadow-xl uppercase transition-all">BAJO</div>
+                <div class="p-6 border-t border-slate-800">
+                    <div class="flex items-center gap-3 bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+                        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-xs">U</div>
+                        <div class="overflow-hidden">
+                            <p class="text-[10px] font-bold text-slate-300 truncate">Usuario Clínico</p>
+                            <p class="text-[8px] text-slate-500 truncate">Sect. APS Chile</p>
                         </div>
-
-                        <div class="space-y-8">
-                            <div class="space-y-4">
-                                <p class="text-[10px] text-red-500 font-black uppercase tracking-widest border-b border-red-100 pb-1">Criterios de Riesgo Alto Directo</p>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-xs font-bold text-indigo-900">
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="dm2" class="w-5 h-5"> Diabetes Mellitus tipo 2</label>
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="ecv_ateroesclerotica" class="w-5 h-5"> Enfermedad Cardiovascular Ateroesclerótica</label>
-                                    <label class="flex items-center gap-3 cursor-pointer text-red-700"><input type="checkbox" name="erc_avanzada" class="w-5 h-5"> ERC avanzada o etapa 3-5</label>
-                                    <label class="flex items-center gap-3 cursor-pointer text-red-700"><input type="checkbox" name="albuminuria_ms" class="w-5 h-5"> Albuminuria moderada o severa (RAC > 30)</label>
-                                    <label class="flex items-center gap-3 cursor-pointer text-red-700"><input type="checkbox" name="hta_refractaria" class="w-5 h-5"> Hipertensión Arterial Refractaria</label>
-                                    <label class="flex items-center gap-3 cursor-pointer text-red-700"><input type="checkbox" name="ldl_190" class="w-5 h-5"> Dislipidemia severa (LDL > 190 mg/dL)</label>
-                                    <label class="flex items-center gap-3 cursor-pointer text-red-700"><input type="checkbox" name="hipercolesterolemia_familiar" class="w-5 h-5"> Hipercolesterolemia familiar</label>
-                                </div>
-                            </div>
-                            <div class="space-y-4">
-                                <p class="text-[10px] text-indigo-400 font-black uppercase tracking-widest border-b border-indigo-100 pb-1">Otros Factores y Modificadores</p>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-xs font-bold text-indigo-700">
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="hta" class="w-5 h-5"> Hipertensión Arterial Diagnosticada</label>
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="dislipidemia" class="w-5 h-5"> Dislipidemia Diagnosticada</label>
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="tabaquismo" class="w-5 h-5"> Tabaquismo Activo</label>
-                                    <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" name="af_ecv_prematura" class="w-5 h-5"> Antecedente familiar ECV prematura</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="rcv-summary" class="mt-8 text-xs font-semibold text-indigo-900 border-l-4 border-indigo-300 pl-6 py-4 bg-white/40 rounded-r-3xl italic shadow-inner">Calculando fundamento clínico...</div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <!-- ALGORITMO HEARTS -->
-                        <div class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm space-y-6">
-                            <div class="flex justify-between items-center border-b border-gray-50 pb-4">
-                                <h3 class="font-black text-indigo-700 uppercase text-xs tracking-widest italic">Manejo HEARTS</h3>
-                                <select name="manejo_hta_paso" class="text-xs font-bold border-2 rounded-xl p-2 bg-indigo-50 text-indigo-800 outline-none transition-all focus:border-indigo-300">
-                                    <option value="0">Paso 0: S/ fármacos</option>
-                                    <option value="1">Paso 1: Biterapia inicial</option>
-                                    <option value="2">Paso 2: Biterapia plenas</option>
-                                    <option value="3">Paso 3: Triple terapia</option>
-                                    <option value="4">Paso 4: HTA Resistente</option>
-                                </select>
-                            </div>
-                            <div id="hearts-feedback" class="space-y-4">
-                                <div class="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
-                                    <p id="hearts-suggestion" class="text-sm text-indigo-900 font-medium leading-relaxed italic">Sugerencia clínica...</p>
-                                </div>
-                                <div class="flex justify-between items-center text-[10px] font-black text-indigo-500 uppercase">
-                                    <span>Control:</span>
-                                    <span id="hearts-freq" class="bg-white px-3 py-1 rounded-lg shadow-sm border border-indigo-100">PRÓX.</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- EXAMEN FÍSICO RÁPIDO -->
-                        <div class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm space-y-4">
-                            <h3 class="font-black text-indigo-700 uppercase text-xs tracking-widest italic border-b border-gray-50 pb-4">Examen Físico</h3>
-                            <textarea name="examen_fisico" placeholder="Obs. adicionales..." class="w-full border-2 border-gray-50 p-4 rounded-2xl h-20 text-xs font-semibold outline-none focus:border-indigo-100"></textarea>
-                            <div class="flex flex-wrap gap-4 text-[10px] font-black text-gray-400 uppercase">
-                                <label class="flex items-center gap-2 cursor-pointer hover:text-indigo-600 transition-colors"><input type="checkbox" name="hallazgo_edema" class="w-4 h-4"> Edema</label>
-                                <label class="flex items-center gap-2 cursor-pointer hover:text-indigo-600 transition-colors"><input type="checkbox" name="hallazgo_crepitos" class="w-4 h-4"> Crépitos</label>
-                                <label class="flex items-center gap-2 cursor-pointer hover:text-indigo-600 transition-colors"><input type="checkbox" name="hallazgo_acantosis" class="w-4 h-4"> Acantosis</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="hta-subflow" class="bg-blue-50 p-10 rounded-[48px] border-2 border-blue-200">
-                        <div class="flex justify-between items-center mb-8 border-b border-blue-100 pb-4">
-                            <h3 class="font-black text-blue-900 uppercase text-xs tracking-widest">Presión Arterial</h3>
-                            <span id="final-pa-badge" class="bg-white text-blue-900 px-4 py-1 rounded-full font-black font-mono text-xl shadow-md">--/--</span>
-                        </div>
-                        <div id="pa-container" class="space-y-6 max-w-lg mx-auto">
-                             <div class="flex gap-4">
-                                 <input type="number" name="pa1_s" placeholder="PAS" class="w-1/2 border-2 p-6 rounded-[24px] font-black text-3xl text-center outline-none focus:border-blue-400 shadow-sm">
-                                 <input type="number" name="pa1_d" placeholder="PAD" class="w-1/2 border-2 p-6 rounded-[24px] font-black text-3xl text-center outline-none focus:border-blue-400 shadow-sm">
-                             </div>
-                             <div id="pa2-field" class="hidden flex gap-4">
-                                 <input type="number" name="pa2_s" placeholder="PAS 2" class="w-1/2 border-2 p-6 rounded-[24px] font-black text-3xl text-center outline-none focus:border-blue-400 shadow-sm bg-white/50">
-                                 <input type="number" name="pa2_d" placeholder="PAD 2" class="w-1/2 border-2 p-6 rounded-[24px] font-black text-3xl text-center outline-none focus:border-blue-400 shadow-sm bg-white/50">
-                             </div>
-                             <div class="flex justify-center gap-6">
-                                <button type="button" id="btn-add-pa" class="text-[10px] text-blue-500 font-black uppercase tracking-widest hover:text-blue-700 transition-colors">+ Añadir toma</button>
-                                <button type="button" id="btn-rem-pa" class="hidden text-[10px] text-red-400 font-black uppercase tracking-widest hover:text-red-600 transition-colors">Quitar toma</button>
-                             </div>
-                        </div>
-                    </div>
-
-                    ${isIngreso ? `
-                    <div class="bg-slate-900 text-slate-100 p-10 rounded-[48px] border-4 border-slate-800 shadow-2xl">
-                        <h3 class="font-black text-indigo-400 uppercase text-xs tracking-widest border-b border-slate-800 pb-4 mb-8 italic">📋 Panel de Exámenes PSCV</h3>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-[11px] font-bold text-slate-400 mb-8">
-                            <label class="flex items-center gap-3 cursor-pointer hover:text-white transition-colors"><input type="checkbox" name="ex_hematocrito" checked> Hematocrito</label>
-                            <label class="flex items-center gap-3 cursor-pointer hover:text-white transition-colors"><input type="checkbox" name="ex_orina" checked> Orina compl.</label>
-                            <label class="flex items-center gap-3 cursor-pointer hover:text-white transition-colors"><input type="checkbox" name="ex_glicemia" checked> Glicemia</label>
-                            <label class="flex items-center gap-3 cursor-pointer hover:text-white transition-colors"><input type="checkbox" name="ex_electrolitos" checked> Electrolitos</label>
-                            <label class="flex items-center gap-3 cursor-pointer hover:text-white transition-colors"><input type="checkbox" name="ex_lipidos" checked> Perfil lipídico</label>
-                            <label class="flex items-center gap-3 cursor-pointer hover:text-white transition-colors"><input type="checkbox" name="ex_creatinina" checked> Creatinina</label>
-                            <label class="flex items-center gap-3 cursor-pointer hover:text-white transition-colors"><input type="checkbox" name="ex_uricemia" checked> Uricemia</label>
-                            <label class="flex items-center gap-3 cursor-pointer hover:text-white transition-colors"><input type="checkbox" name="ex_ecg" checked> ECG</label>
-                        </div>
-                        <div class="bg-slate-800/40 p-6 rounded-3xl space-y-4">
-                            <p class="text-[9px] text-slate-500 uppercase font-black tracking-widest">Sugeridos por condición:</p>
-                            <div class="flex flex-wrap gap-6 text-xs font-bold">
-                                <label class="flex items-center gap-3 text-indigo-400 cursor-pointer"><input type="checkbox" name="ex_rac" id="chk-ex-rac"> RAC (Indice Alb/Crea)</label>
-                                <label class="flex items-center gap-3 text-indigo-400 cursor-pointer"><input type="checkbox" name="ex_hba1c" id="chk-ex-hba1c"> Hemoglobina A1c</label>
-                                <label class="flex items-center gap-3 text-indigo-400 cursor-pointer"><input type="checkbox" name="ex_fo" id="chk-ex-fo"> Fondo de Ojo</label>
-                            </div>
-                        </div>
-                    </div>
-                    ` : ''}
-                    ` : ''}
-
-                    <div class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm space-y-4">
-                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest italic ml-2">Indicaciones particulares y plan manual:</label>
-                        <textarea name="ind_farmacos" placeholder="Escriba aquí indicaciones adicionales que no sean automáticas..." class="w-full border-2 border-gray-50 p-6 rounded-3xl h-32 text-sm font-semibold outline-none focus:border-indigo-200 transition-all"></textarea>
-                    </div>
-                </form>
-
-                <!-- TOOLBAR DE ACCIÓN FINAL (Nota Clínica) -->
-                <div class="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-2xl bg-slate-900/95 backdrop-blur-xl rounded-full p-3 shadow-2xl border border-white/10 flex items-center justify-between px-8 z-40 transition-all hover:scale-[1.02]">
-                    <div class="flex items-center gap-4">
-                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden sm:block">Nota Clínica Lista</p>
-                    </div>
-                    <div class="flex gap-3">
-                         <button id="btn-toggle-modal" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-6 rounded-full text-[10px] uppercase tracking-widest transition-all">
-                            Ver Nota Completa
-                        </button>
-                        <button id="btn-copy-main" class="bg-blue-600 hover:bg-blue-500 text-white font-black py-3 px-8 rounded-full text-[10px] uppercase tracking-widest shadow-xl transition-all active:scale-95 ring-2 ring-blue-400/20">
-                            Copiar Nota
-                        </button>
                     </div>
                 </div>
+            </aside>
+        `;
 
-                <!-- MODAL INTERNO (Hidden by default) -->
-                <div id="note-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" id="modal-overlay"></div>
-                    <div class="bg-white rounded-[40px] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl relative z-10 border border-indigo-100">
-                        <div class="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <h2 class="text-xs font-black tracking-[0.2em] uppercase text-indigo-900 italic">Previsualización de Reporte Clínico</h2>
-                            <button id="btn-close-modal" class="text-gray-400 hover:text-red-500 transition-colors p-2 text-2xl font-light">&times;</button>
+        // Renderizar Contenedor Principal con Tabs
+        appContainer.innerHTML = `
+            <div id="tab-datos" class="tab-content ${window.APS.state.activeTab === 'datos' ? '' : 'hidden'}">
+                ${window.APS.form.renderDatos()}
+            </div>
+            <div id="tab-rcv" class="tab-content ${window.APS.state.activeTab === 'rcv' ? '' : 'hidden'}">
+                ${window.APS.form.renderRCV()}
+            </div>
+            <div id="tab-manejo" class="tab-content ${window.APS.state.activeTab === 'manejo' ? '' : 'hidden'}">
+                ${window.APS.form.renderManejo()}
+            </div>
+            <div id="tab-examenes" class="tab-content ${window.APS.state.activeTab === 'examenes' ? '' : 'hidden'}">
+                ${window.APS.form.renderExamenes()}
+            </div>
+            <div id="tab-nota" class="tab-content ${window.APS.state.activeTab === 'nota' ? '' : 'hidden'}">
+                ${window.APS.form.renderNota()}
+            </div>
+
+            <!-- MODAL DE NOTA (Persistente) -->
+            ${window.APS.form.renderModal()}
+        `;
+
+        window.APS.form.bindEvents();
+        window.APS.form.updateOutput();
+    },
+
+    createNavItem: (id, label, sub) => {
+        const active = window.APS.state.activeTab === id;
+        return `
+            <li>
+                <button data-tab="${id}" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all group ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}">
+                    <div class="text-left">
+                        <p class="text-xs font-bold leading-none">${label}</p>
+                        <p class="text-[9px] mt-1 opacity-50 font-medium">${sub}</p>
+                    </div>
+                </button>
+            </li>
+        `;
+    },
+
+    renderDatos: () => {
+        return `
+            <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <header>
+                    <h2 class="font-display text-3xl font-bold text-slate-900">Datos & Antropometría</h2>
+                    <p class="text-slate-500 text-sm mt-1">Ingreso de parámetros básicos de evaluación.</p>
+                </header>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Edad</label>
+                                 <input type="number" name="edad" value="${window.APS.state.edad}" class="w-full border border-slate-200 bg-slate-50 p-3 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all"></div>
+                            <div><label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Sexo</label>
+                                 <select name="sexo" class="w-full border border-slate-200 bg-slate-50 p-3 rounded-xl font-bold text-slate-900 outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all">
+                                    <option value="F" ${window.APS.state.sexo === 'F' ? 'selected' : ''}>Femenino</option>
+                                    <option value="M" ${window.APS.state.sexo === 'M' ? 'selected' : ''}>Masculino</option>
+                                 </select></div>
                         </div>
-                        <div class="p-10 overflow-y-auto bg-gray-50/20">
-                            <pre id="full-note-display" class="whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-slate-700 bg-white p-8 rounded-3xl border border-indigo-50 shadow-inner"></pre>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Peso (kg)</label>
+                                 <input type="number" name="peso" value="${window.APS.state.peso}" class="w-full border border-slate-200 bg-slate-50 p-3 rounded-xl font-bold text-slate-900 outline-none"></div>
+                            <div><label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Talla (cm)</label>
+                                 <input type="number" name="talla" value="${window.APS.state.talla}" class="w-full border border-slate-200 bg-slate-50 p-3 rounded-xl font-bold text-slate-900 outline-none"></div>
                         </div>
-                        <div class="p-8 border-t border-gray-100 flex justify-center">
-                            <button id="btn-copy-modal" class="bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 px-12 rounded-2xl text-[10px] uppercase tracking-widest shadow-xl transition-all active:scale-95">
-                                Copiar y Cerrar
-                            </button>
+                        <div><label class="block text-[10px] font-black uppercase text-slate-400 mb-2">Cintura (cm)</label>
+                             <input type="number" name="cintura" value="${window.APS.state.cintura}" class="w-full border border-slate-200 bg-slate-50 p-3 rounded-xl font-bold text-slate-900 outline-none"></div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-blue-600 to-blue-800 p-8 rounded-3xl shadow-xl flex flex-col justify-center items-center text-center text-white relative overflow-hidden group">
+                        <div class="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <p class="text-xs font-bold uppercase tracking-widest opacity-60 mb-2">Índice de Masa Corporal (IMC)</p>
+                        <h3 id="imc-display-val" class="font-display text-7xl font-black mb-2 tracking-tighter">${window.APS.state.imc || '--'}</h3>
+                        <p id="imc-desc" class="text-xs font-bold bg-white/10 px-4 py-1 rounded-full uppercase tracking-tight">Evaluando...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    renderRCV: () => {
+        return `
+            <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <header class="flex justify-between items-end">
+                    <div>
+                        <h2 class="font-display text-3xl font-bold text-slate-900">Riesgo Cardiovascular</h2>
+                        <p class="text-slate-500 text-sm mt-1">Algoritmo de estratificación según Guía Técnica MinSal.</p>
+                    </div>
+                    <div id="rcv-badge" class="px-8 py-3 rounded-2xl font-black text-sm text-white bg-slate-400 shadow-xl uppercase transition-all duration-500">BAJO</div>
+                </header>
+
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                        <h4 class="text-[10px] font-black uppercase text-red-500 tracking-widest border-b border-red-50 pb-2">Criterios de Riesgo Alto Directo</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${window.APS.form.toggle('dm2', 'Diabetes Mellitus tipo 2')}
+                            ${window.APS.form.toggle('ecv_ateroesclerotica', 'ECV Ateroesclerótica')}
+                            ${window.APS.form.toggle('erc_avanzada', 'ERC avanzada (Etapa 3 a 5)')}
+                            ${window.APS.form.toggle('albuminuria_ms', 'Albuminuria mod/sev (RAC > 30)')}
+                            ${window.APS.form.toggle('hta_refractaria', 'HTA Refractaria')}
+                            ${window.APS.form.toggle('ldl_190', 'Dislipidemia severa (LDL > 190)')}
+                            ${window.APS.form.toggle('hipercolesterolemia_familiar', 'Hipercolesterolemia familiar')}
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                        <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest border-b border-blue-50 pb-2">Otros Factores y Modificadores</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            ${window.APS.form.toggle('tabaquismo', 'Tabaquismo Activo')}
+                            ${window.APS.form.toggle('hta', 'HTA Diagnosticada')}
+                            ${window.APS.form.toggle('dislipidemia', 'Dislipidemia')}
+                            ${window.APS.form.toggle('af_ecv_prematura', 'AHF ECV Prematura')}
+                            ${window.APS.form.toggle('ante_obstetricos', 'Ant. Obstétricos Riesgo')}
+                            ${window.APS.form.toggle('menopausia_precoz', 'Menopausia Precoz')}
+                            ${window.APS.form.toggle('enf_autoinmune', 'Enf. Autoinmune')}
+                            ${window.APS.form.toggle('vih', 'VIH')}
+                            ${window.APS.form.toggle('trastorno_mental', 'Trastorno Mental Grave')}
+                        </div>
+                    </div>
+
+                    <div id="rcv-summary" class="bg-clinical-50 p-6 rounded-2xl border border-clinical-100 text-xs font-medium text-clinical-700 italic flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-clinical-400 animate-pulse"></div>
+                        Calculando fundamento clínico...
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    renderManejo: () => {
+        return `
+            <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <header class="flex justify-between items-end">
+                    <div>
+                        <h2 class="font-display text-3xl font-bold text-slate-900">Manejo Clínico</h2>
+                        <p class="text-slate-500 text-sm mt-1">Compensación de PA y algoritmo de tratamiento.</p>
+                    </div>
+                    <div id="hearts-status-badge" class="px-6 py-2 rounded-xl font-black text-[10px] uppercase shadow-md transition-all">Evaluando...</div>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-6">
+                        <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                            <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-50 pb-3 mb-6">Registro de Presión Arterial</h4>
+                            <div class="space-y-6">
+                                <div class="flex gap-4">
+                                    <div class="w-1/2 group">
+                                        <p class="text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">PAS (Sistólica)</p>
+                                        <input type="number" name="pa1_s" value="${window.APS.state.pa1_s || ''}" placeholder="000" class="w-full border-2 border-slate-100 bg-slate-50 p-6 rounded-3xl font-display font-black text-4xl text-center focus:border-blue-400 outline-none transition-all">
+                                    </div>
+                                    <div class="w-1/2 group">
+                                        <p class="text-[8px] font-black text-slate-400 uppercase mb-1 ml-2">PAD (Diastólica)</p>
+                                        <input type="number" name="pa1_d" value="${window.APS.state.pa1_d || ''}" placeholder="00" class="w-full border-2 border-slate-100 bg-slate-50 p-6 rounded-3xl font-display font-black text-4xl text-center focus:border-blue-400 outline-none transition-all">
+                                    </div>
+                                </div>
+                                
+                                <div id="pa2-field" class="${window.APS.state.show_pa2 ? '' : 'hidden'} flex gap-4 animate-in slide-in-from-top-2">
+                                    <div class="w-1/2">
+                                        <input type="number" name="pa2_s" value="${window.APS.state.pa2_s || ''}" placeholder="PAS 2" class="w-full border border-slate-100 bg-slate-50/50 p-4 rounded-2xl font-black text-xl text-center focus:border-blue-400 outline-none">
+                                    </div>
+                                    <div class="w-1/2">
+                                        <input type="number" name="pa2_d" value="${window.APS.state.pa2_d || ''}" placeholder="PAD 2" class="w-full border border-slate-100 bg-slate-50/50 p-4 rounded-2xl font-black text-xl text-center focus:border-blue-400 outline-none">
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-4 justify-center">
+                                    <button id="btn-add-pa" class="text-[9px] font-black text-blue-600 uppercase hover:underline">+ Añadir Toma</button>
+                                    <button id="btn-rem-pa" class="${window.APS.state.show_pa2 ? '' : 'hidden'} text-[9px] font-black text-red-500 uppercase hover:underline">Quitar Toma</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 p-8 rounded-3xl shadow-xl text-white">
+                            <h4 class="text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-800 pb-3 mb-4">Metas PSCV</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-slate-800 p-4 rounded-2xl">
+                                    <p class="text-[8px] text-slate-500 uppercase font-black mb-1">Presión Arterial</p>
+                                    <p id="meta-pa-lbl" class="text-sm font-bold text-green-400">--/-- mmHg</p>
+                                </div>
+                                <div class="bg-slate-800 p-4 rounded-2xl">
+                                    <p class="text-[8px] text-slate-500 uppercase font-black mb-1">Crossover LDL</p>
+                                    <p id="meta-ldl-lbl" class="text-sm font-bold text-green-400">< -- mg/dL</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest leading-none">Algoritmo HEARTS</h4>
+                                <select name="manejo_hta_paso" class="text-[10px] font-black bg-slate-100 py-1 px-3 rounded-lg border-none focus:ring-2 focus:ring-blue-400 outline-none">
+                                    <option value="0" ${window.APS.state.manejo_hta_paso == 0 ? 'selected' : ''}>Paso 0: S/ fármacos</option>
+                                    <option value="1" ${window.APS.state.manejo_hta_paso == 1 ? 'selected' : ''}>Paso 1: Biterapia</option>
+                                    <option value="2" ${window.APS.state.manejo_hta_paso == 2 ? 'selected' : ''}>Paso 2: Plenas</option>
+                                    <option value="3" ${window.APS.state.manejo_hta_paso == 3 ? 'selected' : ''}>Paso 3: Triple</option>
+                                    <option value="4" ${window.APS.state.manejo_hta_paso == 4 ? 'selected' : ''}>Paso 4: Resistente</option>
+                                </select>
+                            </div>
+                            <div class="p-6 bg-blue-50/50 rounded-2xl border border-blue-100">
+                                <p id="hearts-suggestion" class="text-sm text-slate-700 font-medium leading-relaxed italic">Sugerencia clínica...</p>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-[10px] font-black text-slate-400 uppercase">Frecuencia Control:</span>
+                                <span id="hearts-freq" class="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-lg">Pendiente</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                            <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-50 pb-3">Examen Físico Segmentario</h4>
+                            <textarea name="examen_fisico" placeholder="Indicar hallazgos anormales..." class="w-full border-2 border-slate-50 bg-slate-50/50 p-4 rounded-2xl h-24 text-xs font-medium focus:border-blue-400 outline-none transition-all">${window.APS.state.examen_fisico}</textarea>
+                            <div class="flex flex-wrap gap-4">
+                                ${window.APS.form.toggle('hallazgo_edema', 'Edema')}
+                                ${window.APS.form.toggle('hallazgo_crepitos', 'Crépitos')}
+                                ${window.APS.form.toggle('hallazgo_acantosis', 'Acantosis')}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         `;
-        window.APS.form.bindEvents();
-        window.APS.form.updateOutput();
+    },
+
+    renderExamenes: () => {
+        return `
+            <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <header>
+                    <h2 class="font-display text-3xl font-bold text-slate-900">Exámenes & Laboratorio</h2>
+                    <p class="text-slate-500 text-sm mt-1">Plan de estudios anual según canasta PSCV.</p>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                        <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-50 pb-3">Canasta Básica de Ingreso</h4>
+                        <div class="grid grid-cols-1 gap-3">
+                            ${window.APS.form.toggle('ex_hematocrito', 'Hematocrito')}
+                            ${window.APS.form.toggle('ex_orina', 'Orina Completa')}
+                            ${window.APS.form.toggle('ex_glicemia', 'Glicemia Ayunas')}
+                            ${window.APS.form.toggle('ex_electrolitos', 'Electrolitos Plasmáticos')}
+                            ${window.APS.form.toggle('ex_lipidos', 'Perfil Lipídico')}
+                            ${window.APS.form.toggle('ex_creatinina', 'Creatinina / VFG')}
+                            ${window.APS.form.toggle('ex_uricemia', 'Uricemia')}
+                            ${window.APS.form.toggle('ex_ecg', 'Electrocardiograma')}
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-blue-600 p-8 rounded-3xl shadow-xl text-white">
+                            <h4 class="text-[10px] font-black uppercase text-blue-300 tracking-widest border-b border-blue-500/50 pb-3 mb-6">Exámenes Sugeridos (Reactivos)</h4>
+                            <div class="space-y-4">
+                                ${window.APS.form.toggleWhite('ex_rac', 'RAC (Albuminuria)')}
+                                ${window.APS.form.toggleWhite('ex_hba1c', 'HbA1c (Si DM2)')}
+                                ${window.APS.form.toggleWhite('ex_fo', 'Fondo de Ojo (Anual)')}
+                            </div>
+                        </div>
+                        <div class="bg-clinical-100 p-8 rounded-3xl border border-clinical-200 text-clinical-800">
+                            <p class="text-[9px] font-black uppercase mb-4 opacity-50 tracking-widest">Nota Técnica:</p>
+                            <p class="text-xs font-semibold leading-relaxed leading-relaxed">Los exámenes se calculan automáticamente basándose en los diagnósticos seleccionados en la pestaña Riesgo CV.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    renderNota: () => {
+        return `
+            <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+                <header>
+                    <h2 class="font-display text-3xl font-bold text-slate-900">Nota & Plan Final</h2>
+                    <p class="text-slate-500 text-sm mt-1">Consolidación de la atención clínica para ficha médica.</p>
+                </header>
+
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-50 pb-3">Indicaciones Farmacológicas y No Farmacológicas Manuales</h4>
+                    <textarea name="ind_farmacos" placeholder="Escribir indicaciones adicionales..." class="w-full border-2 border-slate-50 bg-slate-50/50 p-6 rounded-3xl h-48 text-sm font-medium focus:border-blue-400 outline-none transition-all">${window.APS.state.ind_farmacos}</textarea>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 items-center justify-center p-8 bg-slate-950 rounded-[40px] shadow-2xl relative overflow-hidden ring-1 ring-white/10">
+                    <div class="absolute inset-0 bg-blue-600/10 blur-3xl rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+                    <div class="z-10 text-center md:text-left flex-grow">
+                        <p class="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em] mb-2">Ready to Export</p>
+                        <h3 class="text-white font-bold text-lg leading-tight">Reporte Clínico Generado con Éxito</h3>
+                        <p class="text-slate-500 text-[10px] mt-1">Copia el texto al portapapeles para pegarlo en la ficha electrónica.</p>
+                    </div>
+                    <div class="flex gap-4 z-10 w-full md:w-auto">
+                        <button id="btn-toggle-modal" class="flex-grow md:flex-initial bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all">Ver Completo</button>
+                        <button id="btn-copy-main" class="flex-grow md:flex-initial bg-blue-600 hover:bg-blue-500 text-white font-black py-4 px-10 rounded-2xl text-[10px] uppercase tracking-widest shadow-xl transition-all active:scale-95 ring-2 ring-blue-400/20">Copiar Nota</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    renderModal: () => {
+        return `
+            <div id="note-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" id="modal-overlay"></div>
+                <div class="bg-white rounded-[40px] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl relative z-[110] border border-slate-200">
+                    <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <h2 class="text-xs font-black tracking-[0.2em] uppercase text-slate-500">Preview Reporte Clínico</h2>
+                        <button id="btn-close-modal" class="text-slate-300 hover:text-red-500 transition-colors p-2 text-3xl font-light">&times;</button>
+                    </div>
+                    <div class="p-8 overflow-y-auto bg-slate-50/30">
+                        <pre id="full-note-display" class="whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-slate-700 bg-white p-8 rounded-3xl border border-slate-200 shadow-inner min-h-[400px]"></pre>
+                    </div>
+                    <div class="p-8 border-t border-slate-100 flex justify-center gap-4">
+                        <button id="btn-copy-modal" class="bg-blue-600 hover:bg-blue-500 text-white font-black py-4 px-12 rounded-2xl text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95">Copiar y Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    toggle: (name, label) => {
+        const checked = window.APS.state[name];
+        return `
+            <label class="flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer group select-none ${checked ? 'border-blue-100 bg-blue-50/50' : 'border-slate-50 bg-slate-50/30 hover:border-slate-200'}">
+                <span class="text-xs font-bold text-slate-700 group-hover:text-blue-600 transition-colors">${label}</span>
+                <input type="checkbox" name="${name}" class="w-5 h-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500 transition-all cursor-pointer" ${checked ? 'checked' : ''}>
+            </label>
+        `;
+    },
+
+    toggleWhite: (name, label) => {
+        const checked = window.APS.state[name];
+        return `
+            <label class="flex items-center justify-between p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all cursor-pointer group select-none border border-white/10">
+                <span class="text-xs font-bold text-white">${label}</span>
+                <input type="checkbox" name="${name}" class="w-5 h-5 rounded-lg bg-transparent border-white/30 text-white focus:ring-white transition-all cursor-pointer" ${checked ? 'checked' : ''}>
+            </label>
+        `;
     },
 
     bindEvents: () => {
-        const form = document.getElementById('clinical-form');
+        // Tab Switching
+        document.querySelectorAll('[data-tab]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.getAttribute('data-tab');
+                window.APS.state.activeTab = tab;
+                window.APS.form.render(window.APS.state.module, window.APS.state.type);
+            });
+        });
+
+        const app = document.getElementById('app-container');
+        
+        // Input Handling (Generic)
+        app.addEventListener('input', (e) => {
+            const { name, value, type, checked } = e.target;
+            if (name) {
+                window.APS.state[name] = type === 'checkbox' ? checked : value;
+                
+                // Reactive Exams
+                if (window.APS.state.module === 'cardiovascular') {
+                    const isDM2 = window.APS.state.dm2;
+                    const isHTA = window.APS.state.hta || (window.APS.state.pa1_s >= 140) || window.APS.state.hta_refractaria;
+                    window.APS.state.ex_rac = isHTA || isDM2;
+                    window.APS.state.ex_hba1c = isDM2;
+                    window.APS.state.ex_fo = window.APS.state.ex_fo || isDM2; // Keep FO if manually checked
+                }
+
+                if (name === 'peso' || name === 'talla') {
+                    const imc = window.APS.helpers.calculateBMI(window.APS.state.peso, window.APS.state.talla);
+                    window.APS.state.imc = imc;
+                }
+                
+                // Only update outputs that are visible to avoid unnecessary DOM lag
+                window.APS.form.updateOutput();
+            }
+        });
+
+        // Specific Button Events
         const btnAdd = document.getElementById('btn-add-pa');
+        if (btnAdd) btnAdd.addEventListener('click', () => { window.APS.state.show_pa2 = true; window.APS.form.render(); });
+        
         const btnRem = document.getElementById('btn-rem-pa');
-        const modal = document.getElementById('note-modal');
+        if (btnRem) btnRem.addEventListener('click', () => { window.APS.state.show_pa2 = false; window.APS.form.render(); });
+
+        // Modal Logic
         const btnOpen = document.getElementById('btn-toggle-modal');
         const btnClose = document.getElementById('btn-close-modal');
         const overlay = document.getElementById('modal-overlay');
+        const modal = document.getElementById('note-modal');
 
-        form.addEventListener('input', (e) => {
-            const { name, value, type, checked } = e.target;
-            window.APS.state[name] = type === 'checkbox' ? checked : value;
-            
-            // Lógica reactiva de exámenes (DM2/HTA)
-            if (window.APS.state.module === 'cardiovascular' && window.APS.state.type === 'ingreso') {
-                const isDM2 = window.APS.state.dm2;
-                const isHTA = window.APS.state.hta || (window.APS.state.pa1_s >= 140) || window.APS.state.hta_refractaria;
-                const chkRAC = document.getElementById('chk-ex-rac');
-                const chkHbA1c = document.getElementById('chk-ex-hba1c');
-                const chkFO = document.getElementById('chk-ex-fo');
-                if (chkRAC) { chkRAC.checked = isHTA || isDM2; window.APS.state.ex_rac = isHTA || isDM2; }
-                if (chkHbA1c) { chkHbA1c.checked = isDM2; window.APS.state.ex_hba1c = isDM2; }
-                if (chkFO) { chkFO.checked = isDM2; window.APS.state.ex_fo = isDM2; }
-            }
-
-            if (name === 'peso' || name === 'talla') {
-                const imc = window.APS.helpers.calculateBMI(window.APS.state.peso, window.APS.state.talla);
-                if (document.getElementById('imc-display')) document.getElementById('imc-display').value = imc;
-                window.APS.state.imc = imc;
-            }
-            window.APS.form.updateOutput();
-        });
-
-        if (btnAdd) {
-            btnAdd.addEventListener('click', () => {
-                window.APS.state.show_pa2 = true;
-                document.getElementById('pa2-field').classList.remove('hidden');
-                btnRem.classList.remove('hidden');
-                window.APS.form.updateOutput();
-            });
-        }
-        if (btnRem) {
-            btnRem.addEventListener('click', () => {
-                window.APS.state.show_pa2 = false;
-                document.getElementById('pa2-field').classList.add('hidden');
-                btnRem.classList.add('hidden');
-                window.APS.form.updateOutput();
-            });
-        }
-
-        // Modal Logic
         const toggleModal = (show) => {
             window.APS.state.show_modal = show;
-            if (show) {
-                modal.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-            } else {
-                modal.classList.add('hidden');
-                document.body.style.overflow = 'auto';
-            }
+            if (show) { modal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+            else { modal.classList.add('hidden'); document.body.style.overflow = 'auto'; }
         };
 
-        btnOpen.addEventListener('click', () => toggleModal(true));
-        btnClose.addEventListener('click', () => toggleModal(false));
-        overlay.addEventListener('click', () => toggleModal(false));
-        
-        // Escape to close
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && window.APS.state.show_modal) toggleModal(false);
+        if (btnOpen) btnOpen.addEventListener('click', () => toggleModal(true));
+        if (btnClose) btnClose.addEventListener('click', () => toggleModal(false));
+        if (overlay) overlay.addEventListener('click', () => toggleModal(false));
+
+        const btnCopyMain = document.getElementById('btn-copy-main');
+        if (btnCopyMain) btnCopyMain.addEventListener('click', () => {
+            const text = window.APS.generator.generateText(window.APS.state);
+            window.APS.helpers.copyToClipboard(text);
+            btnCopyMain.innerText = '¡COPIADO!';
+            setTimeout(() => btnCopyMain.innerText = 'COPIAR NOTA', 1500);
         });
 
-        document.getElementById('btn-copy-main').addEventListener('click', () => {
-            const fullText = window.APS.generator.generateText(window.APS.state);
-            window.APS.helpers.copyToClipboard(fullText);
-            // Efecto visual rápido
-            const btn = document.getElementById('btn-copy-main');
-            const originalText = btn.innerText;
-            btn.innerText = "¡COPIADO!";
-            btn.classList.replace('bg-blue-600', 'bg-emerald-600');
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.classList.replace('bg-emerald-600', 'bg-blue-600');
-            }, 1000);
-        });
-
-        document.getElementById('btn-copy-modal').addEventListener('click', () => {
-            const fullText = window.APS.generator.generateText(window.APS.state);
-            window.APS.helpers.copyToClipboard(fullText);
+        const btnCopyMod = document.getElementById('btn-copy-modal');
+        if (btnCopyMod) btnCopyMod.addEventListener('click', () => {
+            const text = window.APS.generator.generateText(window.APS.state);
+            window.APS.helpers.copyToClipboard(text);
             toggleModal(false);
         });
     },
@@ -333,33 +478,48 @@ window.APS.form = {
         const e = window.APS.evaluation;
         const hta = e.evaluateHTA(data);
         const rcv = (data.module === 'cardiovascular' && !isNaN(parseInt(data.edad))) ? e.calculateRCV(data) : { level: '-', reason: 'Calculando...' };
-        
-        // Update RCV Badge
+        const metas = e.getPSCVMeta(data);
+
+        // IMC
+        const imcVal = document.getElementById('imc-display-val');
+        const imcDesc = document.getElementById('imc-desc');
+        if (imcVal) imcVal.innerText = data.imc || '--';
+        if (imcDesc) {
+            const cat = window.APS.helpers.getIMCCategory(data.imc, data.edad);
+            imcDesc.innerText = cat.label;
+            imcDesc.className = `text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-tight ${cat.color === 'red' ? 'bg-red-500' : (cat.color === 'yellow' ? 'bg-amber-400' : 'bg-green-400')}`;
+        }
+
+        // RCV
         const rcvBadge = document.getElementById('rcv-badge');
         if (rcvBadge) {
             rcvBadge.innerText = (rcv.level || '-').toUpperCase();
-            rcvBadge.className = `px-6 py-2 rounded-full font-black text-xs text-white shadow-xl uppercase transition-all ${rcv.level === 'Alto' ? 'bg-red-500 scale-105' : (rcv.level === 'Moderado' ? 'bg-amber-500' : 'bg-emerald-500')}`;
+            rcvBadge.className = `px-8 py-3 rounded-2xl font-black text-sm text-white shadow-xl uppercase transition-all duration-500 ${rcv.level === 'Alto' ? 'bg-red-600 ring-4 ring-red-100' : (rcv.level === 'Moderado' ? 'bg-amber-500' : 'bg-emerald-500')}`;
         }
         const rcvSumm = document.getElementById('rcv-summary');
         if (rcvSumm) rcvSumm.innerText = rcv.reason || 'Sin factores calculados.';
 
-        // Update PA Badge
-        const paBadge = document.getElementById('final-pa-badge');
-        if (paBadge) paBadge.innerText = hta.avgS ? `${hta.avgS}/${hta.avgD}` : "--/--";
+        // Manejo PA
+        const metaPA = document.getElementById('meta-pa-lbl');
+        const metaLDL = document.getElementById('meta-ldl-lbl');
+        if (metaPA) metaPA.innerText = `${metas.metaPA.label} mmHg`;
+        if (metaLDL) metaLDL.innerText = `< ${metas.metaLDL} mg/dL`;
 
-        // Update Hearts
         const heartsSugg = document.getElementById('hearts-suggestion');
         if (heartsSugg) {
             const h = e.evaluateManejoHTA(data);
+            const hStatus = document.getElementById('hearts-status-badge');
             const hFreq = document.getElementById('hearts-freq');
             heartsSugg.innerText = h.sugerencia;
             hFreq.innerText = h.frecuencia;
+            if (hStatus) {
+                hStatus.innerText = h.enMeta ? 'EN META' : 'FUERA DE META';
+                hStatus.className = `px-6 py-2 rounded-xl font-black text-[10px] uppercase shadow-md transition-all ${h.enMeta ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+            }
         }
 
-        // Update Modal Preview Content
-        const display = document.getElementById('full-note-display');
-        if (display) {
-            display.innerText = window.APS.generator.generateText(data);
-        }
+        // Modal Note
+        const modalNote = document.getElementById('full-note-display');
+        if (modalNote) modalNote.innerText = window.APS.generator.generateText(data);
     }
 };
