@@ -12,6 +12,21 @@ window.APS.formModules['salud-mental'] = {
         sueno_sm: 'conservado', apetito_sm: 'conservado', ansiedad_sm: false, depresion_sm: false,
         riesgo_suicida_sm: 'bajo', red_apoyo_sm: '', plan_sm: '', ind_farmacos: ''
     }),
+    generateText: (data) => {
+        const h = window.APS.helpers;
+        const flags = [];
+        if (data.ansiedad_sm) flags.push('síntomas ansiosos');
+        if (data.depresion_sm) flags.push('síntomas depresivos');
+        return `=== NOTA CLÍNICA - SALUD MENTAL (${data.type.toUpperCase()}) ===\n\n` +
+            `[MOTIVO CONSULTA]\n${h.formatClinicalText(data.motivo_consulta_sm) || 'Sin motivo consignado.'}\n\n` +
+            `[TAMIZAJE]\nPaciente de ${data.edad || '--'} años, sexo ${data.sexo || '--'}. ` +
+            `Se pesquisan ${flags.join(' y ') || 'sin síntomas predominantes en tamizaje inicial'}. ` +
+            `Sueño ${data.sueno_sm || 'no consignado'}, apetito ${data.apetito_sm || 'no consignado'}. ` +
+            `Riesgo suicida: ${data.riesgo_suicida_sm || 'no evaluado'}.\n\n` +
+            `[PLAN]\nRed de apoyo: ${h.formatClinicalText(data.red_apoyo_sm) || 'No descrita.'}\n` +
+            `${h.formatClinicalText(data.plan_sm) || 'Se indica seguimiento en controles de salud mental APS.'}\n` +
+            `${h.formatClinicalText(data.ind_farmacos) || ''}`;
+    },
     renderTab: (tabId) => {
         if (tabId === 'datos') return `
             <div class="space-y-6"><h2 class="font-display text-3xl font-bold">Datos de Salud Mental</h2>

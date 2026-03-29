@@ -112,16 +112,14 @@ window.APS.form = {
             if (!name) return;
             window.APS.state[name] = type === 'checkbox' ? checked : value;
 
-            if (window.APS.state.module === 'cardiovascular') {
-                const isDM2 = window.APS.state.dm2;
-                const isHTA = window.APS.state.hta || (window.APS.state.pa1_s >= 140) || window.APS.state.hta_refractaria;
-                window.APS.state.ex_rac = isHTA || isDM2;
-                window.APS.state.ex_hba1c = isDM2;
-                window.APS.state.ex_fo = window.APS.state.ex_fo || isDM2;
-            }
-
+            // Lógica genérica compartida por todos los módulos
             if (name === 'peso' || name === 'talla') {
                 window.APS.state.imc = window.APS.helpers.calculateBMI(window.APS.state.peso, window.APS.state.talla);
+            }
+
+            // Hook: Dejar que el módulo maneje sus propias reglas de negocio
+            if (typeof moduleDef.onStateChange === 'function') {
+                moduleDef.onStateChange(name, window.APS.state);
             }
 
             moduleDef.onInput?.(name);

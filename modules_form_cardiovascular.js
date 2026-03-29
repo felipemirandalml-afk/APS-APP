@@ -25,6 +25,91 @@ window.APS.formModules.cardiovascular = {
         ex_rac: false, ex_hba1c: false, ex_fo: false, ind_farmacos: ''
     }),
     
+    // Hook para manejar cambios en el estado del módulo (Paso 1 del refactor)
+    onStateChange: (name, state) => {
+        const isDM2 = state.dm2;
+        const isHTA = state.hta || (state.pa1_s >= 140) || state.hta_refractaria;
+        
+        state.ex_rac = isHTA || isDM2;
+        state.ex_hba1c = isDM2;
+        state.ex_fo = state.ex_fo || isDM2;
+    },
+
+    // Generador de texto para este módulo (Paso 2 del refactor)
+    generateText: (data) => {
+        const h = window.APS.helpers;
+        const e = window.APS.evaluation;
+        const isIngreso = data.type === 'ingreso';
+
+        let text = `=== NOTA CLÍNICA - CARDIOVASCULAR (${data.type.toUpperCase()}) ===\n\n`;
+        
+        text += `[EV CLÍNICA]\n`;
+        text += `Paciente de ${data.edad || '--'} años, sexo ${data.sexo || '--'}.\n`;
+        if (data.peso && data.talla) {
+            text += `Antropometría: Peso: ${data.peso} kg, Talla: ${data.talla} cm (IMC ${data.imc || '--'}). `;
+            if (data.cintura) text += `Cintura: ${data.cintura} cm.`;
+            text += `\n`;
+        }
+
+        const coMorbs = [];
+        if (data.hta) coMorbs.push("HTA");
+        if (data.dm2) coMorbs.push("DM2");
+        if (data.dislipidemia) coMorbs.push("dislipidemia");
+        if (data.tabaquismo) coMorbs.push("tabaquismo");
+        if (data.erc_avanzada) coMorbs.push("ERC");
+        if (data.ecv_ateroesclerotica) coMorbs.push("ECV ateroesclerótica");
+        
+        let coMorbText = coMorbs.length > 0 ? coMorbs.join(", ") : "";
+        if (data.otros_diagnosticos?.trim()) {
+            const others = data.otros_diagnosticos.trim();
+            coMorbText = coMorbText ? `${coMorbText}, ${others}` : others;
+        }
+        
+        text += `Comorbilidades: ${coMorbText || "no se registran"}.\n`;
+        text += `Cirugías previas: ${data.cirugias_previas?.trim() ? h.formatClinicalText(data.cirugias_previas) : "sin antecedentes quirúrgicos consignados."}\n`;
+        text += `Fármacos de uso habitual: ${data.farmacos_habituales?.trim() ? h.formatClinicalText(data.farmacos_habituales) : "no referidos."}\n`;
+        
+        const rcv = e.calculateRCV(data);
+        const { metaPA, metaLDL } = e.getPSCVMeta(data);
+        text += `\nESTRATIFICACIÓN RCV: ${rcv.level.toUpperCase()} (${rcv.method}). Fundamento: ${rcv.reason}.\n`;
+        text += `Metas PSCV: Meta PA: ${metaPA.label}. Meta LDL: < ${metaLDL} mg/dL.\n`;
+        
+        text += `\n[EXAMEN FÍSICO]\n`;
+        text += window.APS.generator.buildPhysicalExamSegmentary(data);
+        
+        const htaRes = e.evaluateHTA(data);
+        if (htaRes.avgS) {
+            text += `\nPA de evaluación: ${htaRes.avgS}/${htaRes.avgD} mmHg (${htaRes.methodLabel}). Clasificación: ${htaRes.classification}.`;
+        }
+        text += `\n\n`;
+
+        if (isIngreso) {
+            const examString = window.APS.generator.buildExamString(data);
+            if (examString) {
+                text += `[EXÁMENES SOLICITADOS]\n`;
+                text += `${examString}\n\n`;
+            }
+        }
+
+        text += `[PLAN E INDICACIONES]\n`;
+        text += `Control: ${e.evaluateStatus(data).text.toUpperCase()}.\n`;
+        
+        const hearts = e.evaluateManejoHTA(data);
+        if (hearts.pasoActual.id === 0 && !hearts.enMeta) {
+            text += `Medidas no farmacológicas: restricción de sodio, alimentación saludable, actividad física y cese de tabaco. `;
+            text += `Dado cifras fuera de meta, se propone iniciar Paso 1 HEARTS (${hearts.nextPaso.drugs}). `;
+        } else if (!hearts.enMeta) {
+            text += `Paciente fuera de meta en su esquema actual (${hearts.pasoActual.label}). Se sugiere ajustar a ${hearts.nextPaso.label}: ${hearts.nextPaso.drugs}. `;
+        } else {
+            text += `PA en rango meta. Mantener esquema actual (${hearts.pasoActual.label}). `;
+        }
+        text += `Control en ${hearts.frecuencia}.\n`;
+
+        text += `${data.ind_farmacos || ''}`;
+
+        return text;
+    },
+    
     renderTab: (tabId) => {
         const f = window.APS.formModules.cardiovascular;
         if (tabId === 'datos') return f.renderDatos();

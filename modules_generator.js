@@ -1,104 +1,18 @@
 // modules_generator.js
 window.APS.generator = {
     generateText: (data) => {
-        if (data.module === 'salud-mental') return window.APS.generator.generateMentalText(data);
-        if (data.module === 'morbilidad') return window.APS.generator.generateMorbilidadText(data);
+        // Obtenemos la definición del módulo activo
+        // El estado data.module nos dice qué módulo usar (cardiovascular, salud-mental, morbilidad)
+        const moduleDef = window.APS.formModules[data.module];
 
-        const h = window.APS.helpers;
-        const e = window.APS.evaluation;
-        const isCV = data.module === 'cardiovascular';
-        const isIngreso = data.type === 'ingreso';
-
-        let text = `=== NOTA CLÍNICA - ${data.module.toUpperCase()} (${data.type.toUpperCase()}) ===\n\n`;
-        
-        // 1. EVALUACIÓN CLÍNICA Y ANTROPOMETRÍA
-        text += `[EV CLÍNICA]\n`;
-        text += `Paciente de ${data.edad || '--'} años, sexo ${data.sexo || '--'}.\n`;
-        if (data.peso && data.talla) {
-            text += `Antropometría: Peso: ${data.peso} kg, Talla: ${data.talla} cm (IMC ${data.imc || '--'}). `;
-            if (data.cintura) text += `Cintura: ${data.cintura} cm.`;
-            text += `\n`;
+        if (moduleDef && typeof moduleDef.generateText === 'function') {
+            return moduleDef.generateText(data);
         }
 
-        // ANTECEDENTES MÓRBIDOS
-        const coMorbs = [];
-        if (data.hta) coMorbs.push("HTA");
-        if (data.dm2) coMorbs.push("DM2");
-        if (data.dislipidemia) coMorbs.push("dislipidemia");
-        if (data.tabaquismo) coMorbs.push("tabaquismo");
-        if (data.erc_avanzada) coMorbs.push("ERC");
-        if (data.ecv_ateroesclerotica) coMorbs.push("ECV ateroesclerótica");
-        
-        // Incorporar otros diagnósticos en la misma línea si existen
-        let coMorbText = coMorbs.length > 0 ? coMorbs.join(", ") : "";
-        if (data.otros_diagnosticos?.trim()) {
-            const others = data.otros_diagnosticos.trim();
-            coMorbText = coMorbText ? `${coMorbText}, ${others}` : others;
-        }
-        
-        text += `Comorbilidades: ${coMorbText || "no se registran"}.\n`;
-        
-        if (data.cirugias_previas?.trim()) {
-            text += `Cirugías previas: ${h.formatClinicalText(data.cirugias_previas)}\n`;
-        } else {
-            text += `Cirugías previas: sin antecedentes quirúrgicos consignados.\n`;
-        }
-
-        if (data.farmacos_habituales?.trim()) {
-            text += `Fármacos de uso habitual: ${h.formatClinicalText(data.farmacos_habituales)}\n`;
-        } else {
-            text += `Fármacos de uso habitual: no referidos.\n`;
-        }
-        
-        if (isCV) {
-            const rcv = e.calculateRCV(data);
-            const { metaPA, metaLDL } = e.getPSCVMeta(data);
-            text += `\nESTRATIFICACIÓN RCV: ${rcv.level.toUpperCase()} (${rcv.method}). Fundamento: ${rcv.reason}.\n`;
-            text += `Metas PSCV: Meta PA: ${metaPA.label}. Meta LDL: < ${metaLDL} mg/dL.\n`;
-        }
-        
-        // 2. EXAMEN FÍSICO (Lógica segmentaria)
-        text += `\n[EXAMEN FÍSICO]\n`;
-        text += window.APS.generator.buildPhysicalExamSegmentary(data);
-        
-        const htaRes = e.evaluateHTA(data);
-        if (isCV && htaRes.avgS) {
-            text += `\nPA de evaluación: ${htaRes.avgS}/${htaRes.avgD} mmHg (${htaRes.methodLabel}). Clasificación: ${htaRes.classification}.`;
-        }
-        text += `\n\n`;
-
-        // 3. EXÁMENES SOLICITADOS (Nuevo bloque dinámico para Ingreso CV)
-        if (isIngreso && isCV) {
-            const examString = window.APS.generator.buildExamString(data);
-            if (examString) {
-                text += `[EXÁMENES SOLICITADOS]\n`;
-                text += `${examString}\n\n`;
-            }
-        }
-
-        // 4. PLAN E INDICACIONES
-        text += `[PLAN E INDICACIONES]\n`;
-        text += `Control: ${e.evaluateStatus(data).text.toUpperCase()}.\n`;
-        
-        if (isCV) {
-            const h = e.evaluateManejoHTA(data);
-            if (h.pasoActual.id === 0 && !h.enMeta) {
-                text += `Medidas no farmacológicas: restricción de sodio, alimentación saludable, actividad física y cese de tabaco. `;
-                text += `Dado cifras fuera de meta, se propone iniciar Paso 1 HEARTS (${h.nextPaso.drugs}). `;
-            } else if (!h.enMeta) {
-                text += `Paciente fuera de meta en su esquema actual (${h.pasoActual.label}). Se sugiere ajustar a ${h.nextPaso.label}: ${h.nextPaso.drugs}. `;
-            } else {
-                text += `PA en rango meta. Mantener esquema actual (${h.pasoActual.label}). `;
-            }
-            text += `Control en ${h.frecuencia}.\n`;
-        }
-
-        text += `${data.ind_farmacos || (isCV ? '' : 'Mantener indicaciones farmacológicas vigentes y enfatizar cambios estilo vida saludable.')}`;
-
-        return text;
+        return "Error: Generador de texto no definido para este módulo.";
     },
 
-    // Construye el texto de exámenes solicitados
+    // Métodos auxiliares que pueden ser usados por los módulos
     buildExamString: (data) => {
         const basics = [];
         if (data.ex_hematocrito) basics.push("hematocrito");
@@ -126,7 +40,6 @@ window.APS.generator = {
         return res;
     },
 
-    // Genera el examen físico segmentario para evitar contradicciones
     buildPhysicalExamSegmentary: (data) => {
         const h = window.APS.helpers;
         const s = {
@@ -147,64 +60,4 @@ window.APS.generator = {
         if (data.examen_fisico?.trim()) res += ` Además, destaca: ${h.formatClinicalText(data.examen_fisico)}`;
         return res;
     }
-
-,
-
-    generateMentalText: (data) => {
-        const h = window.APS.helpers;
-        const flags = [];
-        if (data.ansiedad_sm) flags.push('síntomas ansiosos');
-        if (data.depresion_sm) flags.push('síntomas depresivos');
-        return `=== NOTA CLÍNICA - SALUD MENTAL (${data.type.toUpperCase()}) ===
-
-` +
-            `[MOTIVO CONSULTA]
-${h.formatClinicalText(data.motivo_consulta_sm) || 'Sin motivo consignado.'}
-
-` +
-            `[TAMIZAJE]
-Paciente de ${data.edad || '--'} años, sexo ${data.sexo || '--'}. ` +
-            `Se pesquisan ${flags.join(' y ') || 'sin síntomas predominantes en tamizaje inicial'}. ` +
-            `Sueño ${data.sueno_sm || 'no consignado'}, apetito ${data.apetito_sm || 'no consignado'}. ` +
-            `Riesgo suicida: ${data.riesgo_suicida_sm || 'no evaluado'}.
-
-` +
-            `[PLAN]
-Red de apoyo: ${h.formatClinicalText(data.red_apoyo_sm) || 'No descrita.'}
-` +
-            `${h.formatClinicalText(data.plan_sm) || 'Se indica seguimiento en controles de salud mental APS.'}
-` +
-            `${h.formatClinicalText(data.ind_farmacos) || ''}`;
-    },
-
-    generateMorbilidadText: (data) => {
-        const h = window.APS.helpers;
-        const sintomas = [];
-        if (data.fiebre_morb) sintomas.push('fiebre');
-        if (data.tos_morb) sintomas.push('tos');
-        if (data.disnea_morb) sintomas.push('disnea');
-        return `=== NOTA CLÍNICA - MORBILIDAD (${data.type.toUpperCase()}) ===
-
-` +
-            `[ANAMNESIS]
-Paciente de ${data.edad || '--'} años, sexo ${data.sexo || '--'}. ` +
-            `Motivo: ${h.formatClinicalText(data.motivo_morb) || 'Sin motivo consignado.'} ` +
-            `Síntomas principales: ${sintomas.join(', ') || 'no referidos en checklist'}. ` +
-            `${h.formatClinicalText(data.sintomas_morb) || ''}
-
-` +
-            `[EXAMEN FÍSICO]
-${h.formatClinicalText(data.examen_morb) || 'Sin hallazgos relevantes consignados.'}
-
-` +
-            `[IMPRESIÓN DIAGNÓSTICA]
-${h.formatClinicalText(data.diagnostico_morb) || 'Diagnóstico en evaluación.'}
-
-` +
-            `[PLAN]
-${h.formatClinicalText(data.plan_morb) || 'Manejo sintomático, signos de alarma y control según evolución.'}
-` +
-            `${h.formatClinicalText(data.ind_farmacos) || ''}`;
-    }
-
 };
