@@ -7,17 +7,25 @@ window.APS.formModules['salud-mental'] = {
         { id: 'tamizaje', label: '🧠 Tamizaje', sub: 'Estado emocional y riesgo' },
         { id: 'nota', label: '📝 Nota Final', sub: 'Plan terapéutico' }
     ],
-    getInitialState: () => ({
+    getInitialState: () => ({ 
+        tipo_atencion: 'control',
+        historia_biografica: '',
         edad: '', sexo: 'F', motivo_consulta_sm: '', sintomas_sm: '',
         sueno_sm: 'conservado', apetito_sm: 'conservado', ansiedad_sm: false, depresion_sm: false,
         riesgo_suicida_sm: 'bajo', red_apoyo_sm: '', plan_sm: '', ind_farmacos: ''
     }),
+    onStateChange: (name, state) => {
+        if (name === 'tipo_atencion') {
+            setTimeout(() => window.APS.form.render(), 10);
+        }
+    },
     generateText: (data) => {
         const h = window.APS.helpers;
         const flags = [];
         if (data.ansiedad_sm) flags.push('síntomas ansiosos');
         if (data.depresion_sm) flags.push('síntomas depresivos');
-        return `=== NOTA CLÍNICA - SALUD MENTAL (${data.type.toUpperCase()}) ===\n\n` +
+        const title = data.tipo_atencion === 'ingreso' ? 'INGRESO SALUD MENTAL' : 'CONTROL SALUD MENTAL';
+        return `--- ${title} ---\n\n` +
             `[MOTIVO CONSULTA]\n${h.formatClinicalText(data.motivo_consulta_sm) || 'Sin motivo consignado.'}\n\n` +
             `[TAMIZAJE]\nPaciente de ${data.edad || '--'} años, sexo ${data.sexo || '--'}. ` +
             `Se pesquisan ${flags.join(' y ') || 'sin síntomas predominantes en tamizaje inicial'}. ` +
@@ -33,13 +41,27 @@ window.APS.formModules['salud-mental'] = {
 
         if (tabId === 'datos') return `
             <div class="space-y-6 animate-in fade-in duration-500">
-                <header><h2 class="font-display text-3xl font-bold text-slate-900 tracking-tight">Datos de Salud Mental</h2></header>
+                <header class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                    <h2 class="font-display text-3xl font-bold text-slate-900 tracking-tight">Datos de Salud Mental</h2>
+                    <div class="w-full sm:w-64">
+                        ${ui.segmentedControl('tipo_atencion', [
+                            {value: 'ingreso', label: 'Ingreso'},
+                            {value: 'control', label: 'Control'}
+                        ], s.tipo_atencion)}
+                    </div>
+                </header>
                 <div class="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         ${ui.inputNumber('edad', 'Edad', s.edad)}
                         ${ui.select('sexo', 'Sexo', [{value: 'F', label: 'Femenino'}, {value: 'M', label: 'Masculino'}], s.sexo)}
                     </div>
-                    ${ui.textArea('motivo_consulta_sm', 'Motivo de consulta', s.motivo_consulta_sm, 'Relato del paciente...')}
+                    
+                    ${s.tipo_atencion === 'ingreso' ? 
+                        ui.textArea('historia_biografica', 'Historia Biográfica y Dinámica Familiar (Solo Ingreso)', s.historia_biografica, 'Hitos del desarrollo, relaciones significativas, red de apoyo estructural...') 
+                        : ''
+                    }
+
+                    ${ui.textArea('motivo_consulta_sm', 'Motivo de consulta / Evolución', s.motivo_consulta_sm, 'Relato del paciente...')}
                 </div>
             </div>`;
 

@@ -10,6 +10,8 @@ window.APS.formModules.cardiovascular = {
         { id: 'nota', label: '📝 Nota Final', sub: 'Generación de reporte' }
     ],
     getInitialState: () => ({
+        tipo_atencion: 'control', // Puede ser 'ingreso' o 'control'
+        antecedentes_familiares: '', // Para guardar si es ingreso
         edad: '', sexo: 'F', peso: '', talla: '', cintura: '', imc: '',
         dm2: false, ecv_ateroesclerotica: false, erc_avanzada: false, erc_etapa: '3a', albuminuria_ms: false,
         hta_refractaria: false, ldl_190: false, hipercolesterolemia_familiar: false,
@@ -32,6 +34,11 @@ window.APS.formModules.cardiovascular = {
     
     // Hook para manejar cambios en el estado del módulo (Paso 1 del refactor)
     onStateChange: (name, state) => {
+        // Redibujar la pantalla si cambiamos entre Ingreso y Control
+        if (name === 'tipo_atencion') {
+            setTimeout(() => window.APS.form.render(), 10);
+            return;
+        }
         const isDM2 = state.dm2;
         const isHTA = state.hta || (state.pa1_s >= 140) || state.hta_refractaria;
         
@@ -71,9 +78,11 @@ window.APS.formModules.cardiovascular = {
     generateText: (data) => {
         const h = window.APS.helpers;
         const e = window.APS.evaluation;
-        const isIngreso = data.type === 'ingreso';
+        const isIngreso = data.tipo_atencion === 'ingreso';
 
-        let text = `=== NOTA CLÍNICA - CARDIOVASCULAR (${data.type.toUpperCase()}) ===\n\n`;
+        // Título dinámico
+        const title = data.tipo_atencion === 'ingreso' ? 'INGRESO CARDIOVASCULAR (PSCV)' : 'CONTROL CARDIOVASCULAR (PSCV)';
+        let text = `--- ${title} ---\n\n`;
         
         text += `[EV CLÍNICA]\n`;
         text += `Paciente de ${data.edad || '--'} años, sexo ${data.sexo || '--'}.\n`;
@@ -162,7 +171,15 @@ window.APS.formModules.cardiovascular = {
 
         return `
         <div class="space-y-6 animate-in fade-in duration-500">
-            <header><h2 class="font-display text-2xl font-black text-slate-900 tracking-tight">Datos del Paciente</h2></header>
+            <header class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                <h2 class="font-display text-2xl font-black text-slate-900 tracking-tight">Datos del Paciente</h2>
+                <div class="w-full sm:w-64">
+                    ${ui.segmentedControl('tipo_atencion', [
+                        {value: 'ingreso', label: 'Ingreso'},
+                        {value: 'control', label: 'Control'}
+                    ], s.tipo_atencion)}
+                </div>
+            </header>
             
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <div class="lg:col-span-5 bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm space-y-4">
@@ -208,6 +225,11 @@ window.APS.formModules.cardiovascular = {
                         ${ui.toggleCompact('ecv_ateroesclerotica', 'ECV', s.ecv_ateroesclerotica)}
                         ${ui.toggleCompact('fragilidad', 'Pte. Frágil', s.fragilidad)}
                     </div>
+                    ${s.tipo_atencion === 'ingreso' ? 
+                        ui.textArea('antecedentes_familiares', 'Antecedentes Familiares (Solo Ingreso)', s.antecedentes_familiares, 'Ej: Padre IAM a los 50 años, Madre DM2...') 
+                        : ''
+                    }
+                    
                     ${ui.textArea('otros_diagnosticos', 'Otros Diagnósticos', s.otros_diagnosticos, 'Ej: Hipotiroidismo, Artrosis...')}
                 </div>
             </div>

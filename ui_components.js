@@ -42,5 +42,19 @@ window.APS.ui = {
             <span class="text-sm font-bold text-white">${label}</span>
             <input type="checkbox" name="${name}" class="w-5 h-5 rounded-lg bg-transparent border-white/30 text-white focus:ring-white transition-all cursor-pointer" ${isChecked ? 'checked' : ''}>
         </label>
+    `,
+
+    // NUEVO: Segmented Control (Interruptor tipo pastilla)
+    segmentedControl: (name, options, currentValue) => `
+        <div class="flex p-1 bg-slate-100/80 rounded-xl border border-slate-200/60">
+            ${options.map(opt => `
+                <label class="flex-1 text-center cursor-pointer relative">
+                    <input type="radio" name="${name}" value="${opt.value}" class="peer sr-only" ${currentValue === opt.value ? 'checked' : ''}>
+                    <div class="py-2 px-4 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all peer-checked:bg-white peer-checked:text-blue-600 peer-checked:shadow-sm text-slate-400 hover:text-slate-600">
+                        ${opt.label}
+                    </div>
+                </label>
+            `).join('')}
+        </div>
     `
 };
