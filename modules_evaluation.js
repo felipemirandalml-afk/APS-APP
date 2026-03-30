@@ -153,34 +153,27 @@ window.APS.evaluation = {
     },
 
     evaluateStatus: (data) => {
-        if (data.module !== 'cardiovascular') {
-            let isCompensated = true;
-            let evaluationText = [];
-            const imc = window.APS.helpers.calculateBMI(data.peso, data.talla);
-            if (imc >= 30) evaluationText.push("Obesidad");
-            return { isCompensated, text: evaluationText.join(", ") || "Parámetros aceptables." };
+        const moduleDef = window.APS.formModules[data.module];
+        
+        // Si el módulo actual tiene su propia forma de evaluar el estado, la usamos.
+        if (moduleDef && typeof moduleDef.evaluateStatus === 'function') {
+            return moduleDef.evaluateStatus(data);
         }
 
-        const htaResult = window.APS.evaluation.evaluateHTA(data);
-        const metas = window.APS.evaluation.getPSCVMeta(data);
-        
+        // Si el módulo no tiene una evaluación específica, usamos esta por defecto.
         let isCompensated = true;
         let evaluationText = [];
-
-        const pas = htaResult.avgS;
-        const pad = htaResult.avgD;
-
-        if (pas > 0 && pad > 0) {
-            if (pas >= metas.metaPA.s || pad >= metas.metaPA.d) {
-                isCompensated = false;
-                evaluationText.push(`PA fuera de meta`);
-            }
-        }
-
         const imc = window.APS.helpers.calculateBMI(data.peso, data.talla);
-        if (imc >= 30) evaluationText.push("Obesidad");
-
-        return { isCompensated, text: evaluationText.join(". ") || (isCompensated ? "En rango meta." : "Fuera de meta.") };
+        
+        if (imc >= 30) {
+            evaluationText.push("Obesidad");
+            isCompensated = false; // Asumimos que si hay obesidad, hay algo que observar.
+        }
+        
+        return { 
+            isCompensated, 
+            text: evaluationText.length > 0 ? evaluationText.join(", ") : "Parámetros en evaluación." 
+        };
     },
 
     getIngresoExams: () => "- Perfil lipídico\n- HbA1c\n- Creatinina\n- RAC\n- Electrolitos\n- ECG",

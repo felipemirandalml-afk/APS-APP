@@ -35,6 +35,33 @@ window.APS.formModules.cardiovascular = {
         state.ex_fo = state.ex_fo || isDM2;
     },
 
+    // NUEVO: Evaluación específica para riesgo cardiovascular
+    evaluateStatus: (data) => {
+        const htaResult = window.APS.evaluation.evaluateHTA(data);
+        const metas = window.APS.evaluation.getPSCVMeta(data);
+        
+        let isCompensated = true;
+        let evaluationText = [];
+
+        const pas = htaResult.avgS;
+        const pad = htaResult.avgD;
+
+        if (pas > 0 && pad > 0) {
+            if (pas >= metas.metaPA.s || pad >= metas.metaPA.d) {
+                isCompensated = false;
+                evaluationText.push(`PA fuera de meta`);
+            }
+        }
+
+        const imc = window.APS.helpers.calculateBMI(data.peso, data.talla);
+        if (imc >= 30) evaluationText.push("Obesidad");
+
+        return { 
+            isCompensated, 
+            text: evaluationText.join(". ") || (isCompensated ? "En rango meta." : "Fuera de meta.") 
+        };
+    },
+
     // Generador de texto para este módulo (Paso 2 del refactor)
     generateText: (data) => {
         const h = window.APS.helpers;
