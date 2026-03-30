@@ -48,6 +48,12 @@ window.APS.form = {
                         ${tabs.map(tab => window.APS.form.createNavItem(tab.id, tab.label, tab.sub)).join('')}
                     </ul>
                 </nav>
+                <div class="p-6 border-t border-slate-800 mt-auto bg-slate-900/50">
+                    <button onclick="if(confirm('¿Seguro que deseas limpiar todos los datos ingresados? Esta acción no se puede deshacer.')) { window.APS.state.__initialized = false; window.APS.form.render(); }" class="flex items-center justify-center gap-3 w-full p-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-800/50 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30 border border-transparent transition-all group">
+                        <span class="text-lg group-hover:rotate-12 transition-transform">🧹</span>
+                        Limpiar Datos
+                    </button>
+                </div>
             </aside>
         `;
 
