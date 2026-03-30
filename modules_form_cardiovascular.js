@@ -148,41 +148,25 @@ window.APS.formModules.cardiovascular = {
 
     renderDatos: () => {
         const s = window.APS.state;
+        const ui = window.APS.ui; // Llamamos a la fábrica de legos
+
         return `
         <div class="space-y-6 animate-in fade-in duration-500">
             <header><h2 class="font-display text-2xl font-black text-slate-900 tracking-tight">Datos del Paciente</h2></header>
             
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- Panel Antropometría -->
                 <div class="lg:col-span-5 bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm space-y-4">
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Edad</label>
-                            <input type="number" name="edad" value="${s.edad}" class="w-full border-2 border-slate-50 p-3 rounded-xl focus:border-blue-500 outline-none transition-all font-bold">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Sexo</label>
-                            <select name="sexo" class="w-full border-2 border-slate-50 p-3 rounded-xl focus:border-blue-500 outline-none transition-all font-bold">
-                                <option value="F" ${s.sexo === 'F' ? 'selected' : ''}>Femenino</option>
-                                <option value="M" ${s.sexo === 'M' ? 'selected' : ''}>Masculino</option>
-                            </select>
-                        </div>
+                        ${ui.inputNumber('edad', 'Edad', s.edad)}
+                        ${ui.select('sexo', 'Sexo', [{value: 'F', label: 'Femenino'}, {value: 'M', label: 'Masculino'}], s.sexo)}
                     </div>
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Peso (kg)</label>
-                            <input type="number" name="peso" value="${s.peso}" class="w-full border-2 border-slate-50 p-3 rounded-xl focus:border-blue-500 outline-none transition-all font-bold">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Talla (cm)</label>
-                            <input type="number" name="talla" value="${s.talla}" class="w-full border-2 border-slate-50 p-3 rounded-xl focus:border-blue-500 outline-none transition-all font-bold">
-                        </div>
+                        ${ui.inputNumber('peso', 'Peso (kg)', s.peso)}
+                        ${ui.inputNumber('talla', 'Talla (cm)', s.talla)}
                     </div>
                     <div class="grid grid-cols-2 gap-3 items-end">
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Perímetro Cintura</label>
-                            <input type="number" name="cintura" value="${s.cintura}" class="w-full border-2 border-slate-50 p-3 rounded-xl focus:border-blue-500 outline-none transition-all font-bold">
-                        </div>
+                        ${ui.inputNumber('cintura', 'Perímetro Cintura', s.cintura)}
+                        
                         <div id="imc-card" class="bg-blue-600 rounded-2xl p-3 text-white text-center shadow-lg shadow-blue-200/50 h-[68px] flex flex-col justify-center">
                             <p class="text-[9px] font-black uppercase opacity-70">IMC</p>
                             <h4 id="imc-display-val" class="text-xl font-black">${s.imc || '--'}</h4>
@@ -191,32 +175,26 @@ window.APS.formModules.cardiovascular = {
                     </div>
                 </div>
 
-                <!-- Panel Antecedentes Compacto -->
                 <div class="lg:col-span-7 bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
                     <h4 class="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1">Comorbilidades Relevantes</h4>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        ${window.APS.form.toggleCompact('hta', 'HTA')}
-                        ${window.APS.form.toggleCompact('dm2', 'Diabetes')}
-                        ${window.APS.form.toggleCompact('dislipidemia', 'DLP')}
-                        ${window.APS.form.toggleCompact('tabaquismo', 'Fumador')}
-                        ${window.APS.form.toggleCompact('erc_avanzada', 'ERC')}
-                        ${window.APS.form.toggleCompact('ecv_ateroesclerotica', 'ECV')}
+                        ${ui.toggleCompact('hta', 'HTA', s.hta)}
+                        ${ui.toggleCompact('dm2', 'Diabetes', s.dm2)}
+                        ${ui.toggleCompact('dislipidemia', 'DLP', s.dislipidemia)}
+                        ${ui.toggleCompact('tabaquismo', 'Fumador', s.tabaquismo)}
+                        ${ui.toggleCompact('erc_avanzada', 'ERC', s.erc_avanzada)}
+                        ${ui.toggleCompact('ecv_ateroesclerotica', 'ECV', s.ecv_ateroesclerotica)}
                     </div>
-                    <div class="mt-4">
-                        <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Otros Diagnósticos</label>
-                        <textarea name="otros_diagnosticos" class="w-full border-2 border-slate-50 p-3 rounded-xl focus:border-blue-500 outline-none transition-all text-sm h-12 mt-1" placeholder="Ej: Hipotiroidismo, Artrosis...">${s.otros_diagnosticos}</textarea>
-                    </div>
+                    ${ui.textArea('otros_diagnosticos', 'Otros Diagnósticos', s.otros_diagnosticos, 'Ej: Hipotiroidismo, Artrosis...')}
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
-                    <h4 class="text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Cirugías Previas</h4>
-                    <textarea name="cirugias_previas" class="w-full border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all text-sm h-24" placeholder="Describa cirugías relevantes...">${s.cirugias_previas}</textarea>
+                    ${ui.textArea('cirugias_previas', 'Cirugías Previas', s.cirugias_previas, 'Describa cirugías relevantes...')}
                 </div>
                 <div class="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
-                    <h4 class="text-[10px] font-black uppercase text-slate-400 mb-2 ml-1">Fármacos de Uso Diario</h4>
-                    <textarea name="farmacos_habituales" class="w-full border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all text-sm h-24" placeholder="Ej: Enalapril 10mg/12h, Metformina 850mg...">${s.farmacos_habituales}</textarea>
+                    ${ui.textArea('farmacos_habituales', 'Fármacos de Uso Diario', s.farmacos_habituales, 'Ej: Enalapril 10mg/12h, Metformina 850mg...')}
                 </div>
             </div>
         </div>`;
