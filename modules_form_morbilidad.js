@@ -8,7 +8,7 @@ window.APS.formModules.morbilidad = {
         { id: 'nota', label: '📝 Nota Final', sub: 'Conducta y tratamiento' }
     ],
     getInitialState: () => ({
-        edad: 0, sexo: 'F', peso: 0, talla: 0, imc: 0,
+        edad: '', sexo: 'F', peso: '', talla: '', imc: '',
         motivo_morb: '', sintomas_morb: '', fiebre_morb: false, tos_morb: false, disnea_morb: false,
         examen_morb: '', diagnostico_morb: '', plan_morb: '', ind_farmacos: ''
     }),

@@ -8,7 +8,7 @@ window.APS.formModules['salud-mental'] = {
         { id: 'nota', label: '📝 Nota Final', sub: 'Plan terapéutico' }
     ],
     getInitialState: () => ({
-        edad: 0, sexo: 'F', motivo_consulta_sm: '', sintomas_sm: '',
+        edad: '', sexo: 'F', motivo_consulta_sm: '', sintomas_sm: '',
         sueno_sm: 'conservado', apetito_sm: 'conservado', ansiedad_sm: false, depresion_sm: false,
         riesgo_suicida_sm: 'bajo', red_apoyo_sm: '', plan_sm: '', ind_farmacos: ''
     }),

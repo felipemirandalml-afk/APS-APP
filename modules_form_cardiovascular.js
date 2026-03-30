@@ -10,7 +10,7 @@ window.APS.formModules.cardiovascular = {
         { id: 'nota', label: '📝 Nota Final', sub: 'Generación de reporte' }
     ],
     getInitialState: () => ({
-        edad: 0, sexo: 'F', peso: 0, talla: 0, cintura: 0, imc: 0,
+        edad: '', sexo: 'F', peso: '', talla: '', cintura: '', imc: '',
         dm2: false, ecv_ateroesclerotica: false, erc_avanzada: false, albuminuria_ms: false,
         hta_refractaria: false, ldl_190: false, hipercolesterolemia_familiar: false,
         tabaquismo: false, hta: false, dislipidemia: false, af_ecv_prematura: false,

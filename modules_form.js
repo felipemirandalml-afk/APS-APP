@@ -29,8 +29,10 @@ window.APS.form = {
         sidebarContainer.innerHTML = `
             <aside class="w-full lg:w-72 lg:fixed lg:h-screen bg-slate-900 text-white flex flex-col border-r border-slate-800 z-50">
                 <div class="p-8 border-b border-slate-800">
-                    <h1 class="font-display font-black text-xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">APS COPILOT</h1>
-                    <p class="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">${moduleDef.sidebarSubtitle}</p>
+                    <button onclick="window.APS.app.init()" class="text-left group transition-all hover:scale-105 origin-left w-full">
+                        <h1 class="font-display font-black text-2xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">APS COPILOT</h1>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1 group-hover:text-white transition-colors">${moduleDef.sidebarSubtitle}</p>
+                    </button>
                 </div>
                 <nav class="flex-grow py-6 overflow-y-auto">
                     <ul class="space-y-1 px-4">
@@ -59,8 +61,8 @@ window.APS.form = {
             <li>
                 <button data-tab="${id}" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all group ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}">
                     <div class="text-left">
-                        <p class="text-xs font-bold leading-none">${label}</p>
-                        <p class="text-[9px] mt-1 opacity-50 font-medium">${sub}</p>
+                        <p class="text-sm font-bold leading-none">${label}</p>
+                        <p class="text-xs mt-1 opacity-60 font-medium">${sub}</p>
                     </div>
                 </button>
             </li>
