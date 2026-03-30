@@ -6,11 +6,9 @@ window.APS.app = {
         const sidebar = document.getElementById('sidebar-container');
         const main = document.querySelector('main');
         
-        // Escondemos el menú lateral cuando estamos en la pantalla de inicio
         if (sidebar) sidebar.innerHTML = '';
-        if (main) main.classList.remove('lg:ml-72');
+        if (main) main.className = 'w-full min-h-screen transition-all duration-300'; // Reseteamos clases en el inicio
 
-        // Disparamos la nueva pantalla de inicio profesional
         if (window.APS.landing && typeof window.APS.landing.init === 'function') {
             window.APS.landing.init();
         } else {
@@ -19,5 +17,4 @@ window.APS.app = {
     }
 };
 
-// Arrancamos la app cuando carga la página
 document.addEventListener('DOMContentLoaded', window.APS.app.init);

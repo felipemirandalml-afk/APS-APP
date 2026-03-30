@@ -25,14 +25,23 @@ window.APS.form = {
         const tabs = moduleDef.getTabs();
         const sidebarContainer = document.getElementById('sidebar-container');
         const appContainer = document.getElementById('app-container');
+        const main = document.querySelector('main'); // Buscamos el main
+
+        // NUEVO: Agregamos el margen izquierdo en pantallas grandes para que el menú no tape
+        if (main) {
+            main.className = 'w-full min-h-screen transition-all duration-300 lg:ml-72';
+        }
 
         sidebarContainer.innerHTML = `
-            <aside class="w-full lg:w-72 lg:fixed lg:h-screen bg-slate-900 text-white flex flex-col border-r border-slate-800 z-50">
+            <aside class="w-full lg:w-72 lg:fixed lg:top-0 lg:bottom-0 bg-slate-900 text-white flex flex-col z-50 overflow-hidden shadow-2xl">
                 <div class="p-8 border-b border-slate-800">
                     <button onclick="window.APS.app.init()" class="text-left group transition-all hover:scale-105 origin-left w-full">
                         <h1 class="font-display font-black text-2xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">APS COPILOT</h1>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1 group-hover:text-white transition-colors">${moduleDef.sidebarSubtitle}</p>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1 group-hover:text-white transition-colors">Volver al Inicio</p>
                     </button>
+                    <div class="mt-6 p-4 bg-slate-800/50 rounded-2xl border border-slate-700/50">
+                         <p class="text-xs text-slate-300 font-bold tracking-widest uppercase">${moduleDef.sidebarSubtitle}</p>
+                    </div>
                 </div>
                 <nav class="flex-grow py-6 overflow-y-auto">
                     <ul class="space-y-1 px-4">
