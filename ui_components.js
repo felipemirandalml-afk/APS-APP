@@ -56,5 +56,15 @@ window.APS.ui = {
                 </label>
             `).join('')}
         </div>
+    `,
+
+    // NUEVO: Botón tipo píldora para selecciones rápidas (Puro CSS, sin recargas)
+    chipToggle: (name, label, isChecked) => `
+        <label class="cursor-pointer group inline-block">
+            <input type="checkbox" name="${name}" class="peer hidden" ${isChecked ? 'checked' : ''}>
+            <div class="px-3 py-1.5 rounded-full border transition-all duration-200 select-none text-[10px] font-bold bg-slate-50 text-slate-500 border-slate-200 group-hover:border-blue-300 group-hover:bg-blue-50 peer-checked:!bg-blue-600 peer-checked:!text-white peer-checked:!border-blue-600 peer-checked:shadow-md">
+                ${label}
+            </div>
+        </label>
     `
 };

@@ -19,6 +19,12 @@ window.APS.formModules.cardiovascular = {
         ante_obstetricos: false, menopausia_precoz: false, enf_autoinmune: false,
         vih: false, trastorno_mental: false, cac_elevado: false, fragilidad: false,
         cirugias_previas: '', farmacos_habituales: '', otros_diagnosticos: '',
+        
+        // NUEVO: Fármacos rápidos
+        f_metformina: false, f_losartan50: false, f_losartan100: false,
+        f_amlodipino5: false, f_amlodipino10: false, f_hctz: false,
+        f_atorvastatina: false, f_levotiroxina: false, f_aas: false, f_salbutamol: false,
+        
         pa1_s: null, pa1_d: null, pa2_s: null, pa2_d: null, pa3_s: null, pa3_d: null, 
         num_pa: 1, show_pa2: false, show_pa3: false,
         manejo_hta_paso: 0, examen_fisico: '', hallazgo_edema: false, hallazgo_crepitos: false, hallazgo_acantosis: false,
@@ -109,7 +115,29 @@ window.APS.formModules.cardiovascular = {
         
         text += `Comorbilidades: ${coMorbText || "no se registran"}.\n`;
         text += `Cirugías previas: ${data.cirugias_previas?.trim() ? h.formatClinicalText(data.cirugias_previas) : "sin antecedentes quirúrgicos consignados."}\n`;
-        text += `Fármacos de uso habitual: ${data.farmacos_habituales?.trim() ? h.formatClinicalText(data.farmacos_habituales) : "no referidos."}\n`;
+        
+        // 1. Recolectar fármacos marcados en los botones rápidos
+        let medsArray = [];
+        if (data.f_metformina) medsArray.push("Metformina 850mg");
+        if (data.f_losartan50) medsArray.push("Losartán 50mg");
+        if (data.f_losartan100) medsArray.push("Losartán 100mg");
+        if (data.f_amlodipino5) medsArray.push("Amlodipino 5mg");
+        if (data.f_amlodipino10) medsArray.push("Amlodipino 10mg");
+        if (data.f_hctz) medsArray.push("Hidroclorotiazida 50mg");
+        if (data.f_atorvastatina) medsArray.push("Atorvastatina 20mg");
+        if (data.f_levotiroxina) medsArray.push("Levotiroxina 100ug");
+        if (data.f_aas) medsArray.push("AAS 100mg");
+        if (data.f_salbutamol) medsArray.push("Salbutamol SOS");
+
+        // 2. Sumar lo que el médico escribió a mano
+        if (data.farmacos_habituales && data.farmacos_habituales.trim() !== '') {
+            medsArray.push(data.farmacos_habituales.trim());
+        }
+
+        // 3. Unir todo con un " + " o poner "No refiere" si está vacío
+        const medsFinal = medsArray.length > 0 ? medsArray.join(" + ") : "No refiere";
+
+        text += `FÁRMACOS HABITUALES: ${medsFinal}\n`;
         
         const rcv = e.calculateRCV(data);
         const { metaPA, metaLDL, metaHbA1c } = e.getPSCVMeta(data);
@@ -239,7 +267,25 @@ window.APS.formModules.cardiovascular = {
                     ${ui.textArea('cirugias_previas', 'Cirugías Previas', s.cirugias_previas, 'Describa cirugías relevantes...')}
                 </div>
                 <div class="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
-                    ${ui.textArea('farmacos_habituales', 'Fármacos de Uso Diario', s.farmacos_habituales, 'Ej: Enalapril 10mg/12h, Metformina 850mg...')}
+                    <div class="space-y-3 mt-6 p-5 bg-slate-50/50 rounded-2xl border border-slate-100">
+                        <label class="text-xs font-black uppercase text-slate-500 ml-1">Fármacos Frecuentes</label>
+                        <div class="flex flex-wrap gap-2">
+                            ${ui.chipToggle('f_metformina', 'Metformina 850mg', s.f_metformina)}
+                            ${ui.chipToggle('f_losartan50', 'Losartán 50mg', s.f_losartan50)}
+                            ${ui.chipToggle('f_losartan100', 'Losartán 100mg', s.f_losartan100)}
+                            ${ui.chipToggle('f_amlodipino5', 'Amlodipino 5mg', s.f_amlodipino5)}
+                            ${ui.chipToggle('f_amlodipino10', 'Amlodipino 10mg', s.f_amlodipino10)}
+                            ${ui.chipToggle('f_hctz', 'HCTZ 50mg', s.f_hctz)}
+                            ${ui.chipToggle('f_atorvastatina', 'Atorvastatina 20mg', s.f_atorvastatina)}
+                            ${ui.chipToggle('f_levotiroxina', 'Levotiroxina 100ug', s.f_levotiroxina)}
+                            ${ui.chipToggle('f_aas', 'AAS 100mg', s.f_aas)}
+                            ${ui.chipToggle('f_salbutamol', 'Salbutamol SOS', s.f_salbutamol)}
+                        </div>
+                        
+                        <div class="mt-4">
+                            ${ui.textArea('farmacos_habituales', 'Otros Fármacos / Detalle de horarios', s.farmacos_habituales, 'Ej: Empagliflozina 10mg, Insulina NPH AM...')}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>`;
