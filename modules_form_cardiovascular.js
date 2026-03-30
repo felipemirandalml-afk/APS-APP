@@ -202,6 +202,8 @@ window.APS.formModules.cardiovascular = {
 
     renderRCV: () => {
         const s = window.APS.state;
+        const ui = window.APS.ui; // Usamos nuestros legos
+
         return `
         <div class="space-y-6 animate-in fade-in duration-500">
             <header class="flex justify-between items-center bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
@@ -213,29 +215,25 @@ window.APS.formModules.cardiovascular = {
             </header>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Criterios de Riesgo Alto Directo -->
                 <div class="md:col-span-2 bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm space-y-4">
                     <h4 class="text-[10px] font-black uppercase text-slate-400 mb-2 ml-1 border-b pb-2">Factores de Riesgo / Criterios Directos</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        ${window.APS.form.toggleCompact('albuminuria_ms', 'Albuminuria mod/sev')}
-                        ${window.APS.form.toggleCompact('hta_refractaria', 'HTA Refractaria')}
-                        ${window.APS.form.toggleCompact('ldl_190', 'LDL > 190 mg/dL')}
-                        ${window.APS.form.toggleCompact('hipercolesterolemia_familiar', 'Hipercolost. Familiar')}
-                        ${window.APS.form.toggleCompact('af_ecv_prematura', 'AHF ECV Prematura')}
-                        ${window.APS.form.toggleCompact('ante_obstetricos', 'Antecedentes Obstétricos')}
-                        ${window.APS.form.toggleCompact('menopausia_precoz', 'Menopausia Precoz')}
-                        ${window.APS.form.toggleCompact('enf_autoinmune', 'Enf. Autoinmune')}
-                        ${window.APS.form.toggleCompact('vih', 'Paciente VIH+')}
-                        ${window.APS.form.toggleCompact('trastorno_mental', 'Trastorno Mental Grave')}
+                        ${ui.toggleCompact('albuminuria_ms', 'Albuminuria mod/sev', s.albuminuria_ms)}
+                        ${ui.toggleCompact('hta_refractaria', 'HTA Refractaria', s.hta_refractaria)}
+                        ${ui.toggleCompact('ldl_190', 'LDL > 190 mg/dL', s.ldl_190)}
+                        ${ui.toggleCompact('hipercolesterolemia_familiar', 'Hipercolost. Familiar', s.hipercolesterolemia_familiar)}
+                        ${ui.toggleCompact('af_ecv_prematura', 'AHF ECV Prematura', s.af_ecv_prematura)}
+                        ${ui.toggleCompact('ante_obstetricos', 'Antecedentes Obstétricos', s.ante_obstetricos)}
+                        ${ui.toggleCompact('menopausia_precoz', 'Menopausia Precoz', s.menopausia_precoz)}
+                        ${ui.toggleCompact('enf_autoinmune', 'Enf. Autoinmune', s.enf_autoinmune)}
+                        ${ui.toggleCompact('vih', 'Paciente VIH+', s.vih)}
+                        ${ui.toggleCompact('trastorno_mental', 'Trastorno Mental Grave', s.trastorno_mental)}
                     </div>
                 </div>
 
-                <!-- Resumen y Explicación -->
                 <div class="bg-clinical-50 p-7 rounded-[32px] border border-clinical-100 flex flex-col h-full">
                     <h4 class="text-[10px] font-black uppercase text-clinical-600 mb-4 tracking-widest">Fundamento Clínico</h4>
-                    <div id="rcv-summary" class="text-sm text-clinical-900 font-medium leading-relaxed flex-grow">
-                        Calculando...
-                    </div>
+                    <div id="rcv-summary" class="text-sm text-clinical-900 font-medium leading-relaxed flex-grow">Calculando...</div>
                     <div class="mt-6 p-4 bg-white/50 rounded-2xl border border-clinical-200/50">
                         <p class="text-[9px] text-clinical-700 leading-tight">La clasificación se basa en la suma de factores y presencia de condiciones de riesgo directo según norma técnica ministerial.</p>
                     </div>
@@ -246,6 +244,7 @@ window.APS.formModules.cardiovascular = {
 
     renderManejo: () => {
         const s = window.APS.state;
+        const ui = window.APS.ui;
         return `
         <div class="space-y-6 animate-in fade-in duration-500">
             <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -342,9 +341,9 @@ window.APS.formModules.cardiovascular = {
                         <h4 class="text-[10px] font-black uppercase text-slate-400 ml-1">Hallazgos Examen Físico</h4>
                         <textarea name="examen_fisico" class="w-full border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all text-sm h-20" placeholder="Anote hallazgos relevantes de hoy...">${s.examen_fisico}</textarea>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                             ${window.APS.form.toggleCompact('hallazgo_edema', 'Edema')}
-                             ${window.APS.form.toggleCompact('hallazgo_crepitos', 'Crépitos')}
-                             ${window.APS.form.toggleCompact('hallazgo_acantosis', 'Acantosis')}
+                             ${ui.toggleCompact('hallazgo_edema', 'Edema', s.hallazgo_edema)}
+                             ${ui.toggleCompact('hallazgo_crepitos', 'Crépitos', s.hallazgo_crepitos)}
+                             ${ui.toggleCompact('hallazgo_acantosis', 'Acantosis', s.hallazgo_acantosis)}
                         </div>
                     </div>
                 </div>
@@ -354,6 +353,8 @@ window.APS.formModules.cardiovascular = {
 
     renderExamenes: () => {
         const s = window.APS.state;
+        const ui = window.APS.ui; // Usamos nuestros legos
+
         return `
         <div class="space-y-6 animate-in fade-in duration-500">
             <header>
@@ -368,14 +369,14 @@ window.APS.formModules.cardiovascular = {
                         <p class="text-[8px] text-slate-400 font-bold">Solicitados en ingreso o control anual</p>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        ${window.APS.form.toggleCompact('ex_hematocrito', 'Hematocrito')}
-                        ${window.APS.form.toggleCompact('ex_orina', 'Orina Completa')}
-                        ${window.APS.form.toggleCompact('ex_glicemia', 'Glicemia')}
-                        ${window.APS.form.toggleCompact('ex_electrolitos', 'Electrolitos')}
-                        ${window.APS.form.toggleCompact('ex_lipidos', 'Perfil Lipídico')}
-                        ${window.APS.form.toggleCompact('ex_creatinina', 'Creatinina / VFG')}
-                        ${window.APS.form.toggleCompact('ex_uricemia', 'Uricemia')}
-                        ${window.APS.form.toggleCompact('ex_ecg', 'ECG Reposo')}
+                        ${ui.toggleCompact('ex_hematocrito', 'Hematocrito', s.ex_hematocrito)}
+                        ${ui.toggleCompact('ex_orina', 'Orina Completa', s.ex_orina)}
+                        ${ui.toggleCompact('ex_glicemia', 'Glicemia', s.ex_glicemia)}
+                        ${ui.toggleCompact('ex_electrolitos', 'Electrolitos', s.ex_electrolitos)}
+                        ${ui.toggleCompact('ex_lipidos', 'Perfil Lipídico', s.ex_lipidos)}
+                        ${ui.toggleCompact('ex_creatinina', 'Creatinina / VFG', s.ex_creatinina)}
+                        ${ui.toggleCompact('ex_uricemia', 'Uricemia', s.ex_uricemia)}
+                        ${ui.toggleCompact('ex_ecg', 'ECG Reposo', s.ex_ecg)}
                     </div>
                 </div>
 
@@ -385,9 +386,9 @@ window.APS.formModules.cardiovascular = {
                         <p class="text-[8px] text-blue-200 font-bold">Activados automáticamente según diagnóstico</p>
                     </div>
                     <div class="space-y-3">
-                        ${window.APS.form.toggleWhite('ex_rac', 'RAC (Microalbuminuria/Crea)')}
-                        ${window.APS.form.toggleWhite('ex_hba1c', 'HbA1c (Diabetes)')}
-                        ${window.APS.form.toggleWhite('ex_fo', 'Fondo de Ojo')}
+                        ${ui.toggleWhite('ex_rac', 'RAC (Microalbuminuria/Crea)', s.ex_rac)}
+                        ${ui.toggleWhite('ex_hba1c', 'HbA1c (Diabetes)', s.ex_hba1c)}
+                        ${ui.toggleWhite('ex_fo', 'Fondo de Ojo', s.ex_fo)}
                     </div>
                     <div class="mt-8 p-5 bg-white/10 rounded-[28px] border border-white/10">
                         <p class="text-[9px] font-medium leading-relaxed italic opacity-80 underline underline-offset-4 decoration-white/20">Nota: RAC es obligatorio en DM2 e HTA con alto riesgo. Fondo de Ojo es anual en DM2.</p>
