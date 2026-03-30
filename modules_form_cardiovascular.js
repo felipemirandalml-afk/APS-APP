@@ -22,7 +22,12 @@ window.APS.formModules.cardiovascular = {
         manejo_hta_paso: 0, examen_fisico: '', hallazgo_edema: false, hallazgo_crepitos: false, hallazgo_acantosis: false,
         ex_hematocrito: true, ex_orina: true, ex_glicemia: true, ex_electrolitos: true,
         ex_lipidos: true, ex_creatinina: true, ex_uricemia: true, ex_ecg: true,
-        ex_rac: false, ex_hba1c: false, ex_fo: false, ind_farmacos: ''
+        ex_rac: false, ex_hba1c: false, ex_fo: false, ind_farmacos: '',
+        // NUEVAS VARIABLES PARA CRISIS:
+        danio_torax: false, 
+        danio_vision: false, 
+        danio_neuro: false, 
+        danio_respi: false
     }),
     
     // Hook para manejar cambios en el estado del módulo (Paso 1 del refactor)
@@ -300,6 +305,19 @@ window.APS.formModules.cardiovascular = {
                         </div>
                     </div>
 
+                    <div id="crisis-container" class="hidden bg-red-50 p-6 rounded-3xl border-2 border-red-200 shadow-sm transition-all duration-500">
+                        <h4 class="text-xs font-black uppercase text-red-600 mb-4 tracking-widest flex items-center gap-2">
+                            <span class="text-lg">🚨</span> Evaluar Daño de Órgano Blanco
+                        </h4>
+                        <p class="text-[10px] text-red-500 font-bold mb-4">Presión arterial en rango de crisis (≥ 180/120). Marque si hay síntomas agudos:</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            ${ui.toggle('danio_torax', 'Dolor Torácico Agudo', s.danio_torax)}
+                            ${ui.toggle('danio_vision', 'Alt. Visual / Papiledema', s.danio_vision)}
+                            ${ui.toggle('danio_neuro', 'Déficit Neurológico Focal', s.danio_neuro)}
+                            ${ui.toggle('danio_respi', 'Disnea / Signos IC', s.danio_respi)}
+                        </div>
+                    </div>
+
                     <div class="bg-blue-600 p-6 rounded-[32px] text-white shadow-xl shadow-blue-200">
                         <h4 class="text-[10px] font-black uppercase opacity-60 mb-3 tracking-widest">Metas PSCV del Paciente</h4>
                         <div class="grid grid-cols-2 gap-4">
@@ -487,6 +505,30 @@ window.APS.formModules.cardiovascular = {
             if (hStatus) {
                 hStatus.innerText = h.enMeta ? 'EN META' : 'FUERA DE META';
                 hStatus.className = `px-5 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${h.enMeta ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+            }
+        }
+
+        // Radar de Crisis Hipertensiva
+        const crisisContainer = document.getElementById('crisis-container');
+        if (crisisContainer) {
+            const pas1 = parseInt(data.pa1_s) || 0;
+            const pad1 = parseInt(data.pa1_d) || 0;
+            const pas2 = parseInt(data.pa2_s) || 0;
+            const pad2 = parseInt(data.pa2_d) || 0;
+            const pas3 = parseInt(data.pa3_s) || 0;
+            const pad3 = parseInt(data.pa3_d) || 0;
+
+            const isCrisis = (pas1 >= 180 || pad1 >= 110) || (pas2 >= 180 || pad2 >= 110) || (pas3 >= 180 || pad3 >= 110);
+
+            if (isCrisis) {
+                crisisContainer.classList.remove('hidden');
+                crisisContainer.classList.add('animate-in', 'slide-in-from-top-4');
+            } else {
+                crisisContainer.classList.add('hidden');
+                data.danio_torax = false;
+                data.danio_vision = false;
+                data.danio_neuro = false;
+                data.danio_respi = false;
             }
         }
     }
