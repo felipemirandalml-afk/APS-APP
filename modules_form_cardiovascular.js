@@ -15,7 +15,7 @@ window.APS.formModules.cardiovascular = {
         hta_refractaria: false, ldl_190: false, hipercolesterolemia_familiar: false,
         tabaquismo: false, hta: false, dislipidemia: false, af_ecv_prematura: false,
         ante_obstetricos: false, menopausia_precoz: false, enf_autoinmune: false,
-        vih: false, trastorno_mental: false, cac_elevado: false,
+        vih: false, trastorno_mental: false, cac_elevado: false, fragilidad: false,
         cirugias_previas: '', farmacos_habituales: '', otros_diagnosticos: '',
         pa1_s: null, pa1_d: null, pa2_s: null, pa2_d: null, pa3_s: null, pa3_d: null, 
         num_pa: 1, show_pa2: false, show_pa3: false,
@@ -90,6 +90,7 @@ window.APS.formModules.cardiovascular = {
         if (data.tabaquismo) coMorbs.push("tabaquismo");
         if (data.erc_avanzada) coMorbs.push("ERC");
         if (data.ecv_ateroesclerotica) coMorbs.push("ECV ateroesclerótica");
+        if (data.fragilidad) coMorbs.push("síndrome de fragilidad");
         
         let coMorbText = coMorbs.length > 0 ? coMorbs.join(", ") : "";
         if (data.otros_diagnosticos?.trim()) {
@@ -102,9 +103,13 @@ window.APS.formModules.cardiovascular = {
         text += `Fármacos de uso habitual: ${data.farmacos_habituales?.trim() ? h.formatClinicalText(data.farmacos_habituales) : "no referidos."}\n`;
         
         const rcv = e.calculateRCV(data);
-        const { metaPA, metaLDL } = e.getPSCVMeta(data);
+        const { metaPA, metaLDL, metaHbA1c } = e.getPSCVMeta(data);
         text += `\nESTRATIFICACIÓN RCV: ${rcv.level.toUpperCase()} (${rcv.method}). Fundamento: ${rcv.reason}.\n`;
-        text += `Metas PSCV: Meta PA: ${metaPA.label}. Meta LDL: < ${metaLDL} mg/dL.\n`;
+        text += `Metas PSCV: Meta PA: ${metaPA.label}. Meta LDL: < ${metaLDL} mg/dL.`;
+        if (metaHbA1c !== "N/A") {
+            text += ` Meta HbA1c: ${metaHbA1c}.`;
+        }
+        text += `\n`;
         
         text += `\n[EXAMEN FÍSICO]\n`;
         text += window.APS.generator.buildPhysicalExamSegmentary(data);
@@ -189,6 +194,7 @@ window.APS.formModules.cardiovascular = {
                         ${ui.toggleCompact('tabaquismo', 'Fumador', s.tabaquismo)}
                         ${ui.toggleCompact('erc_avanzada', 'ERC', s.erc_avanzada)}
                         ${ui.toggleCompact('ecv_ateroesclerotica', 'ECV', s.ecv_ateroesclerotica)}
+                        ${ui.toggleCompact('fragilidad', 'Pte. Frágil', s.fragilidad)}
                     </div>
                     ${ui.textArea('otros_diagnosticos', 'Otros Diagnósticos', s.otros_diagnosticos, 'Ej: Hipotiroidismo, Artrosis...')}
                 </div>
@@ -320,14 +326,18 @@ window.APS.formModules.cardiovascular = {
 
                     <div class="bg-blue-600 p-6 rounded-[32px] text-white shadow-xl shadow-blue-200">
                         <h4 class="text-[10px] font-black uppercase opacity-60 mb-3 tracking-widest">Metas PSCV del Paciente</h4>
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             <div class="p-3 bg-white/10 rounded-2xl border border-white/10">
                                 <p class="text-[8px] font-black opacity-70 uppercase mb-1">Presión Arterial</p>
-                                <p id="meta-pa-lbl" class="text-lg font-black tracking-tight">--/--</p>
+                                <p id="meta-pa-lbl" class="text-sm font-black tracking-tight">--/--</p>
                             </div>
                             <div class="p-3 bg-white/10 rounded-2xl border border-white/10">
                                 <p class="text-[8px] font-black opacity-70 uppercase mb-1">Colesterol LDL</p>
-                                <p id="meta-ldl-lbl" class="text-lg font-black tracking-tight">-- mg/dL</p>
+                                <p id="meta-ldl-lbl" class="text-sm font-black tracking-tight">-- mg/dL</p>
+                            </div>
+                            <div id="meta-hba1c-container" class="p-3 bg-white/10 rounded-2xl border border-white/10 ${s.dm2 ? '' : 'hidden'}">
+                                <p class="text-[8px] font-black opacity-70 uppercase mb-1">Meta HbA1c</p>
+                                <p id="meta-hba1c-lbl" class="text-sm font-black tracking-tight">--</p>
                             </div>
                         </div>
                     </div>
@@ -480,8 +490,20 @@ window.APS.formModules.cardiovascular = {
         // PA UI
         const metaPA = document.getElementById('meta-pa-lbl');
         const metaLDL = document.getElementById('meta-ldl-lbl');
+        const metaHbA1c = document.getElementById('meta-hba1c-lbl');
+        const metaHbA1cContainer = document.getElementById('meta-hba1c-container');
+        
         if (metaPA) metaPA.innerText = `${metas.metaPA.s}/${metas.metaPA.d}`;
-        if (metaLDL) metaLDL.innerText = `${metas.metaLDL} mg/dL`;
+        if (metaLDL) metaLDL.innerText = `< ${metas.metaLDL} mg/dL`;
+        
+        if (metaHbA1cContainer) {
+            if (data.dm2) {
+                metaHbA1cContainer.classList.remove('hidden');
+                if (metaHbA1c) metaHbA1c.innerText = metas.metaHbA1c;
+            } else {
+                metaHbA1cContainer.classList.add('hidden');
+            }
+        }
         
         const avgLbl = document.getElementById('pa-avg-label');
         if (avgLbl) {
