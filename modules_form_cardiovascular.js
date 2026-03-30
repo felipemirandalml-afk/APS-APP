@@ -25,6 +25,9 @@ window.APS.formModules.cardiovascular = {
         f_amlodipino5: false, f_amlodipino10: false, f_hctz: false,
         f_atorvastatina: false, f_levotiroxina: false, f_aas: false, f_salbutamol: false,
         
+        // LÍPIDOS
+        ldl_actual: '', estatina_actual: 'ninguna', intolerancia_estatinas: false, suspendida_lipidos: false,
+
         pa1_s: null, pa1_d: null, pa2_s: null, pa2_d: null, pa3_s: null, pa3_d: null, 
         num_pa: 1, show_pa2: false, show_pa3: false,
         manejo_hta_paso: 0, examen_fisico: '', hallazgo_edema: false, hallazgo_crepitos: false, hallazgo_acantosis: false,
@@ -177,7 +180,19 @@ window.APS.formModules.cardiovascular = {
         } else {
             text += `PA en rango meta. Mantener esquema actual (${hearts.pasoActual.label}). `;
         }
-        text += `Control en ${hearts.frecuencia}.\n`;
+        text += `Control de presión arterial en ${hearts.frecuencia}.\n`;
+
+        if (typeof e.evaluateManejoLipidos === 'function') {
+            const lip = e.evaluateManejoLipidos(data);
+            text += `Manejo Lipídico: `;
+            if (lip.accion === 'suspender') {
+                text += `SE SUSPENDE ESTATINA. ${lip.sugerencia}\n`;
+            } else if (lip.ldl_actual) {
+                text += `${lip.sugerencia} Control en ${lip.frecuencia}.\n`;
+            } else {
+                text += `Pendiente LDL-C para definir escalamiento.\n`;
+            }
+        }
 
         text += `${data.ind_farmacos || ''}`;
 
@@ -453,6 +468,37 @@ window.APS.formModules.cardiovascular = {
                         </div>
                     </div>
 
+                    <!-- Panel Lipídico -->
+                    <div class="bg-white p-7 rounded-[32px] border border-slate-200 shadow-sm space-y-5">
+                        <div class="flex flex-col sm:flex-row justify-between items-start gap-3">
+                            <h4 class="text-[10px] font-black uppercase text-slate-400 ml-1">Manejo Lipídico (Estatinas)</h4>
+                            <div id="lipidos-status-badge" class="px-4 py-1.5 rounded-lg font-black text-[9px] uppercase tracking-widest bg-slate-100 text-slate-500">Evaluando...</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            ${ui.inputNumber('ldl_actual', 'Valor LDL-C Actual (mg/dL)', s.ldl_actual)}
+                            ${ui.select('estatina_actual', 'Terapia Actual', [
+                                {value: 'ninguna', label: 'Sin tratamiento'},
+                                {value: 'baja', label: 'Estatina Baja Int (ej. Pravastatina 10-20)'},
+                                {value: 'moderada', label: 'Estatina Mod (ej. Atorvas 10-20, Rosu 5-10)'},
+                                {value: 'alta', label: 'Estatina Alta Int (ej. Atorvas 40-80, Rosu 20-40)'},
+                                {value: 'ezetimiba', label: 'Terapia + Ezetimiba'}
+                            ], s.estatina_actual)}
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                             ${ui.toggleCompact('intolerancia_estatinas', 'Mialgias/SAMS (Intolerancia)', s.intolerancia_estatinas)}
+                             ${ui.toggleCompact('suspendida_lipidos', 'Suspender (Embarazo/Terminal)', s.suspendida_lipidos)}
+                        </div>
+                        
+                        <div id="lipidos-panel" class="p-5 bg-slate-50 rounded-[28px] border border-slate-100 flex items-start gap-4 mt-2">
+                            <div class="w-10 h-10 bg-amber-500 rounded-2xl flex items-center justify-center shrink-0 text-white font-black text-xl">L</div>
+                            <div>
+                                <p id="lipidos-suggestion" class="text-sm font-bold text-slate-800 leading-snug"></p>
+                                <p id="lipidos-freq" class="text-[10px] font-black text-amber-600 uppercase mt-2 tracking-widest"></p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="bg-white p-7 rounded-[32px] border border-slate-200 shadow-sm space-y-4">
                         <h4 class="text-[10px] font-black uppercase text-slate-400 ml-1">Hallazgos Examen Físico</h4>
                         <textarea name="examen_fisico" class="w-full border-2 border-slate-50 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all text-sm h-20" placeholder="Anote hallazgos relevantes de hoy...">${s.examen_fisico}</textarea>
@@ -615,6 +661,30 @@ window.APS.formModules.cardiovascular = {
             if (hStatus) {
                 hStatus.innerText = h.enMeta ? 'EN META' : 'FUERA DE META';
                 hStatus.className = `px-5 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${h.enMeta ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+            }
+        }
+
+        // LIPIDOS UI
+        const lipidosSugg = document.getElementById('lipidos-suggestion');
+        if (lipidosSugg && typeof e.evaluateManejoLipidos === 'function') {
+            const lip = e.evaluateManejoLipidos(data);
+            const lStatus = document.getElementById('lipidos-status-badge');
+            const lFreq = document.getElementById('lipidos-freq');
+            
+            lipidosSugg.innerText = lip.sugerencia;
+            if (lFreq) lFreq.innerText = `Seguimiento perfil lipídico: ${lip.frecuencia}`;
+            
+            if (lStatus) {
+                if (lip.accion === 'suspender') {
+                    lStatus.innerText = 'SUSPENDIDO';
+                    lStatus.className = 'px-4 py-1.5 rounded-lg font-black text-[9px] uppercase tracking-widest transition-all bg-slate-200 text-slate-800';
+                } else if (!lip.ldl_actual) {
+                    lStatus.innerText = 'SIN DATOS';
+                    lStatus.className = 'px-4 py-1.5 rounded-lg font-black text-[9px] uppercase tracking-widest transition-all bg-slate-100 text-slate-500';
+                } else {
+                    lStatus.innerText = lip.enMeta ? 'EN META' : 'ESCALAR TERAPIA';
+                    lStatus.className = `px-4 py-1.5 rounded-lg font-black text-[9px] uppercase tracking-widest transition-all ${lip.enMeta ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+                }
             }
         }
 

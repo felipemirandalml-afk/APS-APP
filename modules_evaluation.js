@@ -217,5 +217,62 @@ window.APS.evaluation = {
             sugerencia, 
             frecuencia 
         };
+    },
+
+    evaluateManejoLipidos: (data) => {
+        const metas = window.APS.evaluation.getPSCVMeta(data);
+        const ldl_actual = parseInt(data.ldl_actual) || 0;
+        const estatina = data.estatina_actual || 'ninguna';
+        
+        let metaVal = 100;
+        if (metas.metaLDL.includes('130')) metaVal = 130;
+        if (metas.metaLDL.includes('100')) metaVal = 100;
+        if (metas.metaLDL.includes('70')) metaVal = 70;
+        if (metas.metaLDL.includes('55')) metaVal = 55;
+
+        const suspender = data.suspendida_lipidos || false;
+        const intolerancia = data.intolerancia_estatinas || false;
+
+        let enMeta = ldl_actual > 0 && ldl_actual < metaVal;
+        let sugerencia = "";
+        let accion = "mantener";
+        let frecuencia = enMeta ? "6 a 12 meses" : "4 a 12 semanas";
+
+        if (suspender) {
+            enMeta = false;
+            accion = "suspender";
+            sugerencia = "Condición de alto riesgo o fin de vida. Suspender estatina.";
+            frecuencia = "Evolución clínica";
+        } else if (intolerancia) {
+            if (enMeta) {
+                sugerencia = "En meta pero con STAM/mialgias. Vigilar tolerancia.";
+            } else if (ldl_actual > 0) {
+                accion = "escalar";
+                sugerencia = "Fuera de meta + intolerancia. Suspender estatina y considerar Ezetimiba 10 mg.";
+            } else {
+                sugerencia = "Intolerancia consignada. Ingrese LDL para evaluar alternativas.";
+                frecuencia = "1 mes";
+            }
+        } else if (ldl_actual > 0) {
+            if (enMeta) {
+                sugerencia = "LDL en rango meta. Mantener terapia lipídica actual.";
+            } else {
+                accion = "escalar";
+                if (estatina === 'alta') {
+                    sugerencia = "Fuera de meta con estatina alta intensidad. Asociar Ezetimiba 10 mg.";
+                } else if (estatina === 'ezetimiba') {
+                    sugerencia = "Fuera de meta con terapia múltiple. Derivar o usar Ac. Bempedoico.";
+                } else {
+                    const nextStatin = (estatina === 'ninguna' || estatina === 'baja') ? 'moderada' : 'alta';
+                    sugerencia = "Paciente fuera de meta. Escalar a estatina de " + nextStatin + " intensidad.";
+                }
+            }
+        } else {
+            sugerencia = "Ingrese nivel de LDL para evaluar metas lipídicas.";
+            frecuencia = "--";
+            enMeta = false;
+        }
+
+        return { enMeta, ldl_actual, metaVal, sugerencia, frecuencia, accion, estatina };
     }
 };
