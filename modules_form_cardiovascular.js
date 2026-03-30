@@ -11,7 +11,7 @@ window.APS.formModules.cardiovascular = {
     ],
     getInitialState: () => ({
         edad: '', sexo: 'F', peso: '', talla: '', cintura: '', imc: '',
-        dm2: false, ecv_ateroesclerotica: false, erc_avanzada: false, albuminuria_ms: false,
+        dm2: false, ecv_ateroesclerotica: false, erc_avanzada: false, erc_etapa: '3a', albuminuria_ms: false,
         hta_refractaria: false, ldl_190: false, hipercolesterolemia_familiar: false,
         tabaquismo: false, hta: false, dislipidemia: false, af_ecv_prematura: false,
         ante_obstetricos: false, menopausia_precoz: false, enf_autoinmune: false,
@@ -192,7 +192,19 @@ window.APS.formModules.cardiovascular = {
                         ${ui.toggleCompact('dm2', 'Diabetes', s.dm2)}
                         ${ui.toggleCompact('dislipidemia', 'DLP', s.dislipidemia)}
                         ${ui.toggleCompact('tabaquismo', 'Fumador', s.tabaquismo)}
-                        ${ui.toggleCompact('erc_avanzada', 'ERC', s.erc_avanzada)}
+                        <div class="flex flex-col">
+                            ${ui.toggleCompact('erc_avanzada', 'Enf. Renal Crónica', s.erc_avanzada)}
+                            <div id="erc-stage-container" class="${s.erc_avanzada ? '' : 'hidden'} mt-2 pl-3 border-l-2 border-blue-200 ml-2 animate-in fade-in slide-in-from-top-1">
+                                ${ui.select('erc_etapa', 'Etapa MINSAL', [
+                                    {value: '1', label: 'Etapa 1 (VFG ≥90)'},
+                                    {value: '2', label: 'Etapa 2 (VFG 60-89)'},
+                                    {value: '3a', label: 'Etapa 3a (VFG 45-59)'},
+                                    {value: '3b', label: 'Etapa 3b (VFG 30-44)'},
+                                    {value: '4', label: 'Etapa 4 (VFG 15-29)'},
+                                    {value: '5', label: 'Etapa 5 (VFG <15)'}
+                                ], s.erc_etapa || '3a')}
+                            </div>
+                        </div>
                         ${ui.toggleCompact('ecv_ateroesclerotica', 'ECV', s.ecv_ateroesclerotica)}
                         ${ui.toggleCompact('fragilidad', 'Pte. Frágil', s.fragilidad)}
                     </div>
@@ -324,20 +336,28 @@ window.APS.formModules.cardiovascular = {
                         </div>
                     </div>
 
-                    <div class="bg-blue-600 p-6 rounded-[32px] text-white shadow-xl shadow-blue-200">
-                        <h4 class="text-[10px] font-black uppercase opacity-60 mb-3 tracking-widest">Metas PSCV del Paciente</h4>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            <div class="p-3 bg-white/10 rounded-2xl border border-white/10">
-                                <p class="text-[8px] font-black opacity-70 uppercase mb-1">Presión Arterial</p>
-                                <p id="meta-pa-lbl" class="text-sm font-black tracking-tight">--/--</p>
+                    <div class="bg-blue-900 p-6 rounded-[32px] shadow-xl text-white mt-6 relative overflow-hidden">
+                        <div class="absolute -right-10 -top-10 w-40 h-40 bg-blue-600/30 rounded-full blur-3xl"></div>
+                        <h4 class="text-xs font-black uppercase text-blue-300 mb-4 tracking-widest relative z-10">🎯 Metas del Paciente</h4>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10">
+                            <div class="bg-white/10 p-4 rounded-2xl border border-white/10">
+                                <p class="text-[10px] text-blue-200 font-bold uppercase mb-1">Presión Arterial (MINSAL)</p>
+                                <h5 id="meta-pa-display" class="text-2xl font-black">&lt; 140/90</h5>
+                                <div class="mt-2 pt-2 border-t border-white/10">
+                                    <p class="text-[9px] text-blue-300 font-medium">AHA/ESC 2024 Recomienda:</p>
+                                    <p id="meta-pa-intl-display" class="text-[11px] font-bold text-white">&lt; 130/80 mmHg</p>
+                                </div>
                             </div>
-                            <div class="p-3 bg-white/10 rounded-2xl border border-white/10">
-                                <p class="text-[8px] font-black opacity-70 uppercase mb-1">Colesterol LDL</p>
-                                <p id="meta-ldl-lbl" class="text-sm font-black tracking-tight">-- mg/dL</p>
+                            
+                            <div class="bg-white/10 p-4 rounded-2xl border border-white/10 ${s.dm2 ? '' : 'opacity-40'}">
+                                <p class="text-[10px] text-blue-200 font-bold uppercase mb-1">HbA1c (Diabetes)</p>
+                                <h5 id="meta-hba1c-display" class="text-2xl font-black">${s.dm2 ? '< 7%' : 'N/A'}</h5>
                             </div>
-                            <div id="meta-hba1c-container" class="p-3 bg-white/10 rounded-2xl border border-white/10 ${s.dm2 ? '' : 'hidden'}">
-                                <p class="text-[8px] font-black opacity-70 uppercase mb-1">Meta HbA1c</p>
-                                <p id="meta-hba1c-lbl" class="text-sm font-black tracking-tight">--</p>
+
+                            <div class="bg-white/10 p-4 rounded-2xl border border-white/10">
+                                <p class="text-[10px] text-blue-200 font-bold uppercase mb-1">Colesterol LDL</p>
+                                <h5 id="meta-ldl-display" class="text-2xl font-black">&lt; 100</h5>
                             </div>
                         </div>
                     </div>
@@ -570,6 +590,30 @@ window.APS.formModules.cardiovascular = {
                 data.danio_neuro = false;
                 data.danio_respi = false;
             }
+        }
+
+        // (1) Mostrar/Ocultar el desplegable de Etapa ERC
+        const ercContainer = document.getElementById('erc-stage-container');
+        if (ercContainer) {
+            if (data.erc_avanzada) {
+                ercContainer.classList.remove('hidden');
+            } else {
+                ercContainer.classList.add('hidden');
+            }
+        }
+
+        // (2) Actualizar la Tarjeta de Metas Visuales en vivo
+        if (window.APS.evaluation && typeof window.APS.evaluation.getPSCVMeta === 'function') {
+            const metas = window.APS.evaluation.getPSCVMeta(data);
+            const metaPaDisplay = document.getElementById('meta-pa-display');
+            const metaPaIntlDisplay = document.getElementById('meta-pa-intl-display');
+            const metaHba1cDisplay = document.getElementById('meta-hba1c-display');
+            const metaLdlDisplay = document.getElementById('meta-ldl-display');
+
+            if (metaPaDisplay) metaPaDisplay.innerText = `< ${metas.metaPA.s}/${metas.metaPA.d}`;
+            if (metaPaIntlDisplay) metaPaIntlDisplay.innerText = `< ${metas.metaPA_intl.s}/${metas.metaPA_intl.d} mmHg`;
+            if (metaHba1cDisplay) metaHba1cDisplay.innerText = data.dm2 ? metas.metaHbA1c : 'N/A';
+            if (metaLdlDisplay) metaLdlDisplay.innerText = metas.metaLDL;
         }
     }
 };

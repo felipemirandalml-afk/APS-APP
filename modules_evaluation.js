@@ -3,33 +3,28 @@ window.APS.evaluation = {
     // Determina las metas personalizadas del PSCV
     getPSCVMeta: (data) => {
         const age = parseInt(data.edad) || 0;
-        const rcv = window.APS.evaluation.calculateRCV(data).level;
         const isDM2 = !!data.dm2;
-        // CORRECCIÓN DE NOMBRES DE VARIABLES
-        const isERC = !!data.erc_avanzada; 
+        const isERC = !!data.erc_avanzada;
         const isRAC30 = !!data.albuminuria_ms;
-        const isFragil = !!data.fragilidad; // (Añadiremos esto a la UI pronto)
 
-        // Meta PA
-        let metaPA = { s: 140, d: 90, label: "< 140/90 mmHg" };
-        if (age >= 80) {
-            metaPA = { s: 150, d: 90, label: "< 150/90 mmHg (Evitar < 120/60)" };
-        } else if (isERC && isRAC30) {
-            metaPA = { s: 130, d: 80, label: "< 130/80 mmHg" };
-        }
+        // Meta MINSAL
+        let metaPA = { s: 140, d: 90 };
+        if (age >= 80) metaPA = { s: 150, d: 90 };
+        if (isERC && isRAC30) metaPA = { s: 130, d: 80 };
 
-        // Meta LDL
-        let metaLDL = 130;
-        if (rcv === 'Alto') metaLDL = 70;
-        else if (rcv === 'Moderado') metaLDL = 100;
+        // Meta Internacional (AHA/ESC 2024)
+        let metaPA_intl = { s: 130, d: 80 };
+        if (age >= 80) metaPA_intl = { s: 140, d: 90 }; // Tolerancia geriátrica
 
-        // Meta HbA1c
-        let metaHbA1c = "N/A";
-        if (isDM2) {
-            metaHbA1c = (age >= 80 || isFragil) ? "Individualizada" : "< 7%";
-        }
+        let metaHbA1c = '< 7%';
+        if (age >= 75) metaHbA1c = '< 8%';
 
-        return { metaPA, metaLDL, metaHbA1c, rcv };
+        let metaLDL = '< 100 mg/dL';
+        const rcvLevel = window.APS.evaluation.calculateRCV(data).level;
+        if (rcvLevel === 'ALTO' || rcvLevel === 'Alto') metaLDL = '< 70 mg/dL';
+        if (rcvLevel === 'MUY ALTO' || rcvLevel === 'Muy Alto' || data.ecv_ateroesclerotica) metaLDL = '< 55 mg/dL';
+
+        return { metaPA, metaPA_intl, metaHbA1c, metaLDL };
     },
 
     // Lógica avanzada de Riesgo Cardiovascular (RCV) Chileno APS
