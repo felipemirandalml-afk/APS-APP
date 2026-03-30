@@ -27,9 +27,9 @@ window.APS.form = {
         const appContainer = document.getElementById('app-container');
         const main = document.querySelector('main'); // Buscamos el main
 
-        // NUEVO: Agregamos el margen izquierdo en pantallas grandes para que el menú no tape
+        // CORRECCIÓN: Encendemos de nuevo el margen izquierdo para empujar el formulario
         if (main) {
-            main.className = 'w-full min-h-screen transition-all duration-300 lg:ml-72';
+            main.classList.add('lg:ml-72');
         }
 
         sidebarContainer.innerHTML = `

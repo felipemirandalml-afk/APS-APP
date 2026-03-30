@@ -7,7 +7,11 @@ window.APS.app = {
         const main = document.querySelector('main');
         
         if (sidebar) sidebar.innerHTML = '';
-        if (main) main.className = 'w-full min-h-screen transition-all duration-300'; // Reseteamos clases en el inicio
+        
+        // CORRECCIÓN: Solo apagamos el margen izquierdo, sin borrar los paddings
+        if (main) {
+            main.classList.remove('lg:ml-72');
+        }
 
         if (window.APS.landing && typeof window.APS.landing.init === 'function') {
             window.APS.landing.init();
