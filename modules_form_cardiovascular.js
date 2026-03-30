@@ -523,6 +523,24 @@ window.APS.formModules.cardiovascular = {
             if (isCrisis) {
                 crisisContainer.classList.remove('hidden');
                 crisisContainer.classList.add('animate-in', 'slide-in-from-top-4');
+                
+                const hasDamage = data.danio_torax || data.danio_vision || data.danio_neuro || data.danio_respi;
+                const crisisText = "Derivo paciente a urgencias por sospecha de hipertensión severa con daño de órgano blanco, toma de presión de control y medidas antihipertensivas, realizar ECG.";
+                
+                if (hasDamage) {
+                    if (!data.ind_farmacos) {
+                        data.ind_farmacos = crisisText;
+                    } else if (!data.ind_farmacos.includes("urgencias por sospecha")) {
+                        data.ind_farmacos = crisisText + "\n\n" + data.ind_farmacos;
+                    }
+                    
+                    const planInput = document.querySelector('textarea[name="ind_farmacos"]');
+                    if (planInput && planInput.value !== data.ind_farmacos) {
+                        planInput.value = data.ind_farmacos;
+                        planInput.classList.add('border-red-500', 'bg-red-50');
+                        setTimeout(() => planInput.classList.remove('border-red-500', 'bg-red-50'), 1500);
+                    }
+                }
             } else {
                 crisisContainer.classList.add('hidden');
                 data.danio_torax = false;
