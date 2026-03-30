@@ -28,24 +28,50 @@ window.APS.formModules['salud-mental'] = {
             `${h.formatClinicalText(data.ind_farmacos) || ''}`;
     },
     renderTab: (tabId) => {
+        const s = window.APS.state;
+        const ui = window.APS.ui;
+
         if (tabId === 'datos') return `
-            <div class="space-y-6"><h2 class="font-display text-3xl font-bold">Datos de Salud Mental</h2>
-            <div class="bg-white p-8 rounded-3xl border space-y-4">
-                <input type="number" name="edad" value="${window.APS.state.edad}" placeholder="Edad" class="w-full border p-3 rounded-xl">
-                <select name="sexo" class="w-full border p-3 rounded-xl"><option value="F" ${window.APS.state.sexo === 'F' ? 'selected' : ''}>Femenino</option><option value="M" ${window.APS.state.sexo === 'M' ? 'selected' : ''}>Masculino</option></select>
-                <textarea name="motivo_consulta_sm" class="w-full border p-3 rounded-xl h-24" placeholder="Motivo de consulta">${window.APS.state.motivo_consulta_sm}</textarea>
-            </div></div>`;
+            <div class="space-y-6 animate-in fade-in duration-500">
+                <header><h2 class="font-display text-3xl font-bold text-slate-900 tracking-tight">Datos de Salud Mental</h2></header>
+                <div class="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        ${ui.inputNumber('edad', 'Edad', s.edad)}
+                        ${ui.select('sexo', 'Sexo', [{value: 'F', label: 'Femenino'}, {value: 'M', label: 'Masculino'}], s.sexo)}
+                    </div>
+                    ${ui.textArea('motivo_consulta_sm', 'Motivo de consulta', s.motivo_consulta_sm, 'Relato del paciente...')}
+                </div>
+            </div>`;
+
         if (tabId === 'tamizaje') return `
-            <div class="space-y-6"><h2 class="font-display text-3xl font-bold">Tamizaje Psicológico</h2>
-            <div class="bg-white p-8 rounded-3xl border space-y-4">
-                ${window.APS.form.toggle('ansiedad_sm', 'Síntomas ansiosos')}
-                ${window.APS.form.toggle('depresion_sm', 'Síntomas depresivos')}
-                <select name="sueno_sm" class="w-full border p-3 rounded-xl"><option value="conservado" ${window.APS.state.sueno_sm === 'conservado' ? 'selected' : ''}>Sueño conservado</option><option value="alterado" ${window.APS.state.sueno_sm === 'alterado' ? 'selected' : ''}>Sueño alterado</option></select>
-                <select name="apetito_sm" class="w-full border p-3 rounded-xl"><option value="conservado" ${window.APS.state.apetito_sm === 'conservado' ? 'selected' : ''}>Apetito conservado</option><option value="alterado" ${window.APS.state.apetito_sm === 'alterado' ? 'selected' : ''}>Apetito alterado</option></select>
-                <select name="riesgo_suicida_sm" class="w-full border p-3 rounded-xl"><option value="bajo" ${window.APS.state.riesgo_suicida_sm === 'bajo' ? 'selected' : ''}>Riesgo suicida bajo</option><option value="moderado" ${window.APS.state.riesgo_suicida_sm === 'moderado' ? 'selected' : ''}>Riesgo suicida moderado</option><option value="alto" ${window.APS.state.riesgo_suicida_sm === 'alto' ? 'selected' : ''}>Riesgo suicida alto</option></select>
-                <textarea name="red_apoyo_sm" class="w-full border p-3 rounded-xl h-20" placeholder="Red de apoyo">${window.APS.state.red_apoyo_sm}</textarea>
-                <textarea name="plan_sm" class="w-full border p-3 rounded-xl h-24" placeholder="Plan terapéutico y seguimiento">${window.APS.state.plan_sm}</textarea>
-            </div></div>`;
-        return `<div class="space-y-8 pb-20"><h2 class="font-display text-3xl font-bold">Nota & Plan Final</h2><div class="bg-white p-8 rounded-3xl border"><textarea name="ind_farmacos" class="w-full border p-6 rounded-3xl h-48" placeholder="Indicaciones adicionales">${window.APS.state.ind_farmacos}</textarea></div><div class="flex gap-4 justify-center p-8 bg-slate-950 rounded-[40px]"><button id="btn-toggle-modal" class="bg-slate-800 text-white font-bold py-4 px-8 rounded-2xl text-[10px]">Ver Completo</button><button id="btn-copy-main" class="bg-blue-600 text-white font-black py-4 px-10 rounded-2xl text-[10px]">Copiar Nota</button></div></div>`;
+            <div class="space-y-6 animate-in fade-in duration-500">
+                <header><h2 class="font-display text-3xl font-bold text-slate-900 tracking-tight">Tamizaje Psicológico</h2></header>
+                <div class="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        ${ui.toggle('ansiedad_sm', 'Síntomas ansiosos', s.ansiedad_sm)}
+                        ${ui.toggle('depresion_sm', 'Síntomas depresivos', s.depresion_sm)}
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+                        ${ui.select('sueno_sm', 'Sueño', [{value: 'conservado', label: 'Conservado'}, {value: 'alterado', label: 'Alterado'}], s.sueno_sm)}
+                        ${ui.select('apetito_sm', 'Apetito', [{value: 'conservado', label: 'Conservado'}, {value: 'alterado', label: 'Alterado'}], s.apetito_sm)}
+                        ${ui.select('riesgo_suicida_sm', 'Riesgo Suicida', [{value: 'bajo', label: 'Bajo'}, {value: 'moderado', label: 'Moderado'}, {value: 'alto', label: 'Alto'}], s.riesgo_suicida_sm)}
+                    </div>
+                    ${ui.textArea('red_apoyo_sm', 'Red de apoyo', s.red_apoyo_sm, 'Con quién vive, apoyo familiar...')}
+                    ${ui.textArea('plan_sm', 'Plan terapéutico y seguimiento', s.plan_sm, 'Derivaciones, consejería...')}
+                </div>
+            </div>`;
+
+        return `
+            <div class="space-y-8 pb-20 animate-in fade-in duration-500">
+                <header><h2 class="font-display text-3xl font-bold text-slate-900 tracking-tight">Nota & Plan Final</h2></header>
+                <div class="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm">
+                    ${ui.textArea('ind_farmacos', 'Indicaciones Adicionales o Fármacos', s.ind_farmacos, 'Ej: Sertralina 50mg/día...')}
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 items-center justify-center p-10 bg-slate-900 rounded-[40px] shadow-2xl relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl"></div>
+                    <button id="btn-toggle-modal" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all">Ver Completo</button>
+                    <button id="btn-copy-main" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-black py-4 px-10 rounded-2xl text-[10px] uppercase tracking-widest transition-all border-b-4 border-blue-800">Copiar Nota</button>
+                </div>
+            </div>`;
     }
 };

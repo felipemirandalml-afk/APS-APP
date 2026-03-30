@@ -29,8 +29,62 @@ window.APS.formModules.morbilidad = {
             `${h.formatClinicalText(data.ind_farmacos) || ''}`;
     },
     renderTab: (tabId) => {
-        if (tabId === 'datos') return `<div class="space-y-6"><h2 class="font-display text-3xl font-bold">Datos de Morbilidad</h2><div class="bg-white p-8 rounded-3xl border space-y-4"><input type="number" name="edad" value="${window.APS.state.edad}" placeholder="Edad" class="w-full border p-3 rounded-xl"><select name="sexo" class="w-full border p-3 rounded-xl"><option value="F" ${window.APS.state.sexo === 'F' ? 'selected' : ''}>Femenino</option><option value="M" ${window.APS.state.sexo === 'M' ? 'selected' : ''}>Masculino</option></select><div class="grid grid-cols-2 gap-4"><input type="number" name="peso" value="${window.APS.state.peso}" placeholder="Peso" class="w-full border p-3 rounded-xl"><input type="number" name="talla" value="${window.APS.state.talla}" placeholder="Talla" class="w-full border p-3 rounded-xl"></div><div class="bg-blue-600 text-white rounded-xl p-3">IMC: <span id="imc-display-val">${window.APS.state.imc || '--'}</span> · <span id="imc-desc">Evaluando...</span></div><textarea name="motivo_morb" class="w-full border p-3 rounded-xl h-20" placeholder="Motivo de consulta">${window.APS.state.motivo_morb}</textarea></div></div>`;
-        if (tabId === 'clinico') return `<div class="space-y-6"><h2 class="font-display text-3xl font-bold">Evaluación Clínica</h2><div class="bg-white p-8 rounded-3xl border space-y-4">${window.APS.form.toggle('fiebre_morb','Fiebre')}${window.APS.form.toggle('tos_morb','Tos')}${window.APS.form.toggle('disnea_morb','Disnea')}<textarea name="sintomas_morb" class="w-full border p-3 rounded-xl h-24" placeholder="Evolución de síntomas">${window.APS.state.sintomas_morb}</textarea><textarea name="examen_morb" class="w-full border p-3 rounded-xl h-24" placeholder="Examen físico">${window.APS.state.examen_morb}</textarea><input name="diagnostico_morb" value="${window.APS.state.diagnostico_morb}" class="w-full border p-3 rounded-xl" placeholder="Diagnóstico"><textarea name="plan_morb" class="w-full border p-3 rounded-xl h-24" placeholder="Plan y tratamiento">${window.APS.state.plan_morb}</textarea></div></div>`;
-        return `<div class="space-y-8 pb-20"><h2 class="font-display text-3xl font-bold">Nota & Plan Final</h2><div class="bg-white p-8 rounded-3xl border"><textarea name="ind_farmacos" class="w-full border p-6 rounded-3xl h-48" placeholder="Indicaciones adicionales">${window.APS.state.ind_farmacos}</textarea></div><div class="flex gap-4 justify-center p-8 bg-slate-950 rounded-[40px]"><button id="btn-toggle-modal" class="bg-slate-800 text-white font-bold py-4 px-8 rounded-2xl text-[10px]">Ver Completo</button><button id="btn-copy-main" class="bg-blue-600 text-white font-black py-4 px-10 rounded-2xl text-[10px]">Copiar Nota</button></div></div>`;
+        const s = window.APS.state;
+        const ui = window.APS.ui;
+
+        if (tabId === 'datos') return `
+            <div class="space-y-6 animate-in fade-in duration-500">
+                <header><h2 class="font-display text-3xl font-bold text-slate-900 tracking-tight">Datos de Morbilidad</h2></header>
+                <div class="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        ${ui.inputNumber('edad', 'Edad', s.edad)}
+                        ${ui.select('sexo', 'Sexo', [{value: 'F', label: 'Femenino'}, {value: 'M', label: 'Masculino'}], s.sexo)}
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        ${ui.inputNumber('peso', 'Peso (kg)', s.peso)}
+                        ${ui.inputNumber('talla', 'Talla (cm)', s.talla)}
+                    </div>
+                    <div class="bg-blue-600 text-white rounded-2xl p-4 shadow-lg shadow-blue-200/50 flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] font-black uppercase opacity-70">Índice de Masa Corporal</p>
+                            <p class="text-2xl font-black"><span id="imc-display-val">${s.imc || '--'}</span></p>
+                        </div>
+                        <div id="imc-desc" class="text-xs font-bold px-3 py-1 bg-white/20 rounded-full">Evaluando...</div>
+                    </div>
+                    ${ui.textArea('motivo_morb', 'Motivo de consulta', s.motivo_morb, 'Describa el motivo principal...')}
+                </div>
+            </div>`;
+
+        if (tabId === 'clinico') return `
+            <div class="space-y-6 animate-in fade-in duration-500">
+                <header><h2 class="font-display text-3xl font-bold text-slate-900 tracking-tight">Evaluación Clínica</h2></header>
+                <div class="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        ${ui.toggle('fiebre_morb', 'Fiebre', s.fiebre_morb)}
+                        ${ui.toggle('tos_morb', 'Tos', s.tos_morb)}
+                        ${ui.toggle('disnea_morb', 'Disnea', s.disnea_morb)}
+                    </div>
+                    ${ui.textArea('sintomas_morb', 'Evolución de síntomas', s.sintomas_morb, 'Detalles de los síntomas...')}
+                    ${ui.textArea('examen_morb', 'Examen Físico', s.examen_morb, 'Hallazgos al examen físico...')}
+                    <div class="space-y-1 mt-4">
+                        <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Diagnóstico</label>
+                        <input type="text" name="diagnostico_morb" value="${s.diagnostico_morb}" class="w-full border-2 border-slate-50 p-3 rounded-xl focus:border-blue-500 outline-none transition-all font-bold" placeholder="Impresión diagnóstica...">
+                    </div>
+                    ${ui.textArea('plan_morb', 'Plan y Tratamiento', s.plan_morb, 'Indicaciones generales...')}
+                </div>
+            </div>`;
+
+        return `
+            <div class="space-y-8 pb-20 animate-in fade-in duration-500">
+                <header><h2 class="font-display text-3xl font-bold text-slate-900 tracking-tight">Nota & Plan Final</h2></header>
+                <div class="bg-white p-8 rounded-[32px] border border-slate-200 shadow-sm">
+                    ${ui.textArea('ind_farmacos', 'Indicaciones Adicionales o Fármacos', s.ind_farmacos, 'Recetas, derivaciones, reposo...')}
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 items-center justify-center p-10 bg-slate-900 rounded-[40px] shadow-2xl relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl"></div>
+                    <button id="btn-toggle-modal" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-2xl text-[10px] uppercase tracking-widest transition-all">Ver Completo</button>
+                    <button id="btn-copy-main" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-black py-4 px-10 rounded-2xl text-[10px] uppercase tracking-widest transition-all border-b-4 border-blue-800">Copiar Nota</button>
+                </div>
+            </div>`;
     }
 };

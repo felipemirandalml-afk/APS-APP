@@ -85,19 +85,6 @@ window.APS.form = {
         </div>
     `,
 
-    toggle: (name, label) => {
-        const checked = !!window.APS.state[name];
-        return `<label class="flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer group select-none ${checked ? 'border-blue-100 bg-blue-50/50' : 'border-slate-50 bg-slate-50/30 hover:border-slate-200'}"><span class="text-xs font-bold text-slate-700 group-hover:text-blue-600 transition-colors">${label}</span><input type="checkbox" name="${name}" class="w-5 h-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500 transition-all cursor-pointer" ${checked ? 'checked' : ''}></label>`;
-    },
-    toggleCompact: (name, label) => {
-        const checked = !!window.APS.state[name];
-        return `<label class="flex items-center justify-between p-3 rounded-xl border-2 transition-all cursor-pointer group select-none ${checked ? 'border-blue-100 bg-blue-50/50' : 'border-slate-50 bg-slate-50/30 hover:border-slate-200'}"><span class="text-[10px] font-bold text-slate-600 group-hover:text-blue-600 transition-colors">${label}</span><input type="checkbox" name="${name}" class="w-4 h-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" ${checked ? 'checked' : ''}></label>`;
-    },
-    toggleWhite: (name, label) => {
-        const checked = !!window.APS.state[name];
-        return `<label class="flex items-center justify-between p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all cursor-pointer group select-none border border-white/10"><span class="text-xs font-bold text-white">${label}</span><input type="checkbox" name="${name}" class="w-5 h-5 rounded-lg bg-transparent border-white/30 text-white focus:ring-white transition-all cursor-pointer" ${checked ? 'checked' : ''}></label>`;
-    },
-
     bindEvents: (moduleDef) => {
         document.querySelectorAll('[data-tab]').forEach(btn => {
             btn.addEventListener('click', () => {
