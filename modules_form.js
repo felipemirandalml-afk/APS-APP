@@ -29,7 +29,7 @@ window.APS.form = {
         sidebarContainer.innerHTML = `
             <aside class="w-full lg:w-72 lg:fixed lg:h-screen bg-slate-900 text-white flex flex-col border-r border-slate-800 z-50">
                 <div class="p-8 border-b border-slate-800">
-                    <h1 class="font-display font-black text-xl tracking-tighter text-blue-400">APS COPILOT</h1>
+                    <h1 class="font-display font-black text-xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">APS COPILOT</h1>
                     <p class="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">${moduleDef.sidebarSubtitle}</p>
                 </div>
                 <nav class="flex-grow py-6 overflow-y-auto">

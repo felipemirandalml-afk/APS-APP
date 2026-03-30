@@ -5,9 +5,10 @@ window.APS.evaluation = {
         const age = parseInt(data.edad) || 0;
         const rcv = window.APS.evaluation.calculateRCV(data).level;
         const isDM2 = !!data.dm2;
-        const isERC = !!data.erc;
-        const isRAC30 = !!data.rac30;
-        const isFragil = !!data.fragilidad;
+        // CORRECCIÓN DE NOMBRES DE VARIABLES
+        const isERC = !!data.erc_avanzada; 
+        const isRAC30 = !!data.albuminuria_ms;
+        const isFragil = !!data.fragilidad; // (Añadiremos esto a la UI pronto)
 
         // Meta PA
         let metaPA = { s: 140, d: 90, label: "< 140/90 mmHg" };
@@ -175,8 +176,6 @@ window.APS.evaluation = {
             text: evaluationText.length > 0 ? evaluationText.join(", ") : "Parámetros en evaluación." 
         };
     },
-
-    getIngresoExams: () => "- Perfil lipídico\n- HbA1c\n- Creatinina\n- RAC\n- Electrolitos\n- ECG",
 
     evaluateManejoHTA: (data) => {
         const hta = window.APS.evaluation.evaluateHTA(data);

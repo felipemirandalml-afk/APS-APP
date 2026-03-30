@@ -25,7 +25,19 @@ window.APS.helpers = {
 
     getIMCCategory: (imc, age) => {
         const val = parseFloat(imc);
+        const edadNum = parseInt(age) || 0;
+        
         if (!val || val === 0) return { label: 'Sin datos', color: 'gray' };
+        
+        // Criterio Adulto Mayor (≥ 65 años) según MINSAL
+        if (edadNum >= 65) {
+            if (val <= 23) return { label: 'Bajo Peso', color: 'yellow' }; // Riesgo desnutrición
+            if (val < 28) return { label: 'Normal', color: 'green' };
+            if (val < 32) return { label: 'Sobrepeso', color: 'yellow' };
+            return { label: 'Obesidad', color: 'red' };
+        } 
+        
+        // Criterio Adulto (< 65 años)
         if (val < 18.5) return { label: 'Bajo Peso', color: 'yellow' };
         if (val < 25) return { label: 'Normal', color: 'green' };
         if (val < 30) return { label: 'Sobrepeso', color: 'yellow' };

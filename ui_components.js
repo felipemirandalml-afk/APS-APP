@@ -21,7 +21,7 @@ window.APS.ui = {
         <div class="space-y-1">
             <label class="text-[10px] font-black uppercase text-slate-400 ml-1">${label}</label>
             <select name="${name}" class="w-full border-2 border-slate-50 p-3 rounded-xl focus:border-blue-500 outline-none transition-all font-bold">
-                ${options.map(opt => `<option value="${opt.value}" ${currentValue === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
+                ${options.map(opt => `<option value="${opt.value}" ${currentValue == opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
             </select>
         </div>
     `,
